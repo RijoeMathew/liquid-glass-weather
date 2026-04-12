@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-:root {
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-}
-
 html, body {
   margin: 0;
   padding: 0;
@@ -14,21 +9,19 @@ html, body {
   min-height: 100vh;
 }
 
-@theme {
-  --color-glass-bg: var(--glass-bg);
-  --color-glass-border: var(--glass-border);
-}
-
 @layer components {
   .glass-card {
-    @apply backdrop-blur-[40px] bg-white/5 border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.1)];
+    /* iOS Liquid Glass Effect: Higher blur, stronger border highlights, subtle inner glow */
+    @apply backdrop-blur-[60px] bg-white/[0.08] border border-white/30 rounded-4xl 
+           shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] 
+           [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_1px_1px_rgba(255,255,255,0.3)];
   }
   
   .glass-panel {
-    @apply backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl;
+    @apply backdrop-blur-2xl bg-white/[0.05] border border-white/10 rounded-3xl;
   }
 
   .liquid-gradient {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: radial-gradient(circle at 50% -20%, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 1) 70%);
   }
 }
