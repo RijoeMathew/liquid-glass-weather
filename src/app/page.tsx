@@ -335,7 +335,7 @@ export default function WeatherApp() {
                                     >
                                         <div className="w-12 sm:w-24">
                                             <p className={`text-sm sm:text-lg font-bold ${selectedDayIndex === idx ? 'text-blue-400' : 'text-white'}`}>
-                                                {idx === 0 ? "Today" : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                                                {idx === 0 ? "Today" : new Date(new Date(day.date).getTime() + 86400000).toLocaleDateString('en-US', { weekday: 'short' })}
                                             </p>
                                         </div>
                                         
