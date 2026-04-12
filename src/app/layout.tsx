@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Liquid Glass Weather",
   description: "A beautiful weather app with liquid background",
   icons: {
-    icon: '/favicon.svg',
+    icon: '/liquid-glass-weather/favicon.svg',
   },
 };
 
