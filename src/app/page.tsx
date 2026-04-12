@@ -20,6 +20,7 @@ interface WeatherData {
         time: string;
         temp: number;
         code: number;
+        rain_chance: number;
     }>;
     daily: Array<{
         date: string;
@@ -27,6 +28,7 @@ interface WeatherData {
         temp_min: number;
         condition: string;
         code: number;
+        rain_chance: number;
     }>;
 }
 
@@ -61,14 +63,14 @@ export default function WeatherApp() {
                     longitude = pos.coords.longitude;
                     setUsingDefault(false);
                 } catch (geoErr) {
-                    latitude = 51.5074;
-                    longitude = -0.1278;
+                    latitude = 43.6532;
+                    longitude = -79.3832;
                     setUsingDefault(true);
                 }
             }
 
             const res = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto`
             );
 
             if (!res.ok) throw new Error("API Connection Failed");
@@ -86,6 +88,7 @@ export default function WeatherApp() {
                     time,
                     temp: data.hourly.temperature_2m[i],
                     code: data.hourly.weather_code[i],
+                    rain_chance: data.hourly.precipitation_probability[i],
                 })),
                 daily: data.daily.time.map((date: string, i: number) => ({
                     date,
@@ -93,6 +96,7 @@ export default function WeatherApp() {
                     temp_min: data.daily.temperature_2m_min[i],
                     condition: getWeatherDesc(data.daily.weather_code[i]),
                     code: data.daily.weather_code[i],
+                    rain_chance: data.daily.precipitation_probability_max[i],
                 })).slice(0, 7),
             });
             setError(null);
@@ -234,7 +238,7 @@ export default function WeatherApp() {
                         {usingDefault && (
                             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-amber-500/20 border border-amber-500/30 p-3 rounded-2xl text-amber-200 text-[10px] sm:text-xs flex items-center justify-between gap-4 backdrop-blur-md">
                                 <span className="flex items-center gap-2">
-                                    <MapPin size={14} /> GPS unavailable. Showing London weather.
+                                    <MapPin size={14} /> GPS unavailable. Showing Toronto weather.
                                 </span>
                                 <button onClick={() => fetchWeather()} className="bg-amber-500/20 hover:bg-amber-500/40 px-3 py-1 rounded-lg transition-colors flex items-center gap-1 font-bold whitespace-nowrap">
                                     <RefreshCw size={12} /> Sync GPS
@@ -308,6 +312,9 @@ export default function WeatherApp() {
                                         <span className="text-base sm:text-lg font-mono font-bold text-white">
                                             {Math.round(hour.temp)}°
                                         </span>
+                                        {hour.rain_chance > 0 && (hour.code >= 51 && hour.code <= 67 || hour.code >= 80 && hour.code <= 82 || hour.code >= 95 && hour.code <= 99) && (
+                                            <span className="text-[9px] text-blue-400 font-bold mt-1">{hour.rain_chance}%</span>
+                                        )}
                                     </motion.div>
                                 ))}
                             </div>
@@ -336,7 +343,12 @@ export default function WeatherApp() {
                                             <div className="p-1.5 rounded-full bg-white/5 group-hover:scale-110 transition-transform flex-shrink-0">
                                                 {getWeatherIcon(day.code, 18, "sm:w-7 sm:h-7")}
                                             </div>
-                                            <span className="text-[10px] sm:text-xs font-medium text-white/60 group-hover:text-white transition-colors truncate">{day.condition}</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] sm:text-xs font-medium text-white/60 group-hover:text-white transition-colors truncate">{day.condition}</span>
+                                                {day.rain_chance > 0 && (
+                                                    <span className="text-[9px] text-blue-400 font-bold">{day.rain_chance}% rain</span>
+                                                )}
+                                            </div>
                                         </div>
                                         
                                         <div className="flex gap-3 sm:gap-6 text-sm sm:text-xl font-mono flex-shrink-0">
