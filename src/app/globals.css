@@ -20,13 +20,15 @@ html, body {
 }
 
 @layer components {
+@layer components {
   .glass-card {
-    @apply backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl;
+    @apply backdrop-blur-[40px] bg-white/5 border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.1)];
   }
   
   .glass-panel {
     @apply backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl;
   }
+
 
   .liquid-gradient {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
