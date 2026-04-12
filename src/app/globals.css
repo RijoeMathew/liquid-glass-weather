@@ -9,7 +9,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background: #0f172a; /* Dark base color */
+  background: #0f172a;
   color: white;
   min-height: 100vh;
 }
@@ -20,7 +20,6 @@ html, body {
 }
 
 @layer components {
-@layer components {
   .glass-card {
     @apply backdrop-blur-[40px] bg-white/5 border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.1)];
   }
@@ -28,7 +27,6 @@ html, body {
   .glass-panel {
     @apply backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl;
   }
-
 
   .liquid-gradient {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
