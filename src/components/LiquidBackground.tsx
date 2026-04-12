@@ -21,12 +21,12 @@ export default function LiquidBackground({ code = 0 }: Props) {
   }, [code]);
 
   const particles = useMemo(() => {
-    const count = category === 'rain' ? 40 : category === 'snow' ? 30 : 0;
+    const count = (category === 'rain' || category === 'thunder') ? 40 : category === 'snow' ? 30 : 0;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       delay: Math.random() * 5,
-      duration: category === 'rain' ? 0.5 + Math.random() * 0.3 : 4 + Math.random() * 5,
+      duration: (category === 'rain' || category === 'thunder') ? 0.5 + Math.random() * 0.3 : 4 + Math.random() * 5,
       size: Math.random() * (category === 'snow' ? 4 : 1.5) + 1,
     }));
   }, [category]);
@@ -79,7 +79,7 @@ export default function LiquidBackground({ code = 0 }: Props) {
       {/* Weather Particles */}
       <AnimatePresence mode="wait">
         <motion.div key={category} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-          {category === 'rain' && particles.map((p) => (
+          {(category === 'rain' || category === 'thunder') && particles.map((p) => (
             <motion.div
               key={p.id}
               initial={{ y: "-10vh", x: p.left }}

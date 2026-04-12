@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import LiquidBackground from "../components/LiquidBackground";
 import { 
-    Cloud, Sun, CloudRain, Wind, Thermometer, MapPin, Loader2, 
+    Cloud, Sun, Moon, CloudRain, Wind, Thermometer, MapPin, Loader2, 
     CloudSnow, CloudLightning, CloudFog, Droplets, Navigation, Calendar, RefreshCw, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
@@ -130,9 +130,12 @@ export default function WeatherApp() {
         return "Unknown";
     }
 
-    function getWeatherIcon(code: number, size: number = 24, className: string = "") {
-        if (code === 0) return <Sun size={size} className={`text-yellow-400 ${className}`} />;
-        if (code <= 3) return <Sun size={size} className={`text-yellow-200 ${className}`} />;
+    function getWeatherIcon(code: number, size: number = 24, className: string = "", time?: string) {
+        const hour = time ? new Date(time).getHours() : new Date().getHours();
+        const isNight = hour < 6 || hour >= 18;
+
+        if (code === 0) return isNight ? <Moon size={size} className={`text-slate-300 ${className}`} /> : <Sun size={size} className={`text-yellow-400 ${className}`} />;
+        if (code <= 3) return isNight ? <Moon size={size} className={`text-slate-200 ${className}`} /> : <Sun size={size} className={`text-yellow-200 ${className}`} />;
         if (code <= 48) return <CloudFog size={size} className={`text-slate-400 ${className}`} />;
         if (code <= 55) return <CloudRain size={size} className={`text-blue-300 ${className}`} />;
         if (code <= 65) return <CloudRain size={size} className={`text-blue-500 ${className}`} />;
@@ -301,7 +304,7 @@ export default function WeatherApp() {
                                         <span className="text-[9px] sm:text-[10px] font-bold text-white/40 mb-2 sm:mb-3 whitespace-nowrap">
                                             {new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}
                                         </span>
-                                        {getWeatherIcon(hour.code, 24, "sm:w-8 sm:h-8 mb-2 sm:mb-3")}
+                                        {getWeatherIcon(hour.code, 24, "sm:w-8 sm:h-8 mb-2 sm:mb-3", hour.time)}
                                         <span className="text-base sm:text-lg font-mono font-bold text-white">
                                             {Math.round(hour.temp)}°
                                         </span>
