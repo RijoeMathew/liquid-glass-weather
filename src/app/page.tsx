@@ -230,7 +230,7 @@ export default function WeatherApp() {
 
     return (
         <main className="min-h-screen p-4 sm:p-8 md:p-12 lg:p-20 flex flex-col items-center relative z-0 overflow-x-hidden">
-            <LiquidBackground code={weather?.current.code} />
+            <LiquidBackground code={weather?.current.code} time={new Date().toISOString()} />
 
             <AnimatePresence>
                 {weather && (
