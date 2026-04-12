@@ -26,6 +26,17 @@ export default function LiquidBackground({ code = 0, time }: Props) {
     return hour < 6 || hour >= 18;
   }, [time]);
 
+  const particles = useMemo(() => {
+    const count = (category === 'rain' || category === 'thunder') ? 40 : category === 'snow' ? 30 : 0;
+    return Array.from({ length: count }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: Math.random() * 5,
+      duration: (category === 'rain' || category === 'thunder') ? 0.5 + Math.random() * 0.3 : 4 + Math.random() * 5,
+      size: Math.random() * (category === 'snow' ? 4 : 1.5) + 1,
+    }));
+  }, [category]);
+
   const config = useMemo(() => {
     if (isNight) {
       return {
