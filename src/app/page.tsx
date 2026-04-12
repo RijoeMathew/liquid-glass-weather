@@ -291,7 +291,7 @@ export default function WeatherApp() {
                                     <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 rotate-45" /> 
                                     Hourly
                                     <span className="text-white/40 font-medium text-[10px] sm:text-xs ml-1 sm:ml-2 px-1.5 py-0.5 rounded-lg bg-white/5 whitespace-nowrap">
-                                        {selectedDayIndex === 0 ? "Today" : new Date(weather.daily[selectedDayIndex].date).toLocaleDateString('en-US', { weekday: 'short' })}
+                                        {selectedDayIndex === 0 ? "Today" : new Date(new Date(weather.daily[selectedDayIndex].date).getTime() + 86400000).toLocaleDateString('en-US', { weekday: 'short' })}
                                     </span>
                                 </h2>
                             </div>
