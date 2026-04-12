@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Liquid Glass Weather",
   description: "A beautiful weather app with liquid background",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
