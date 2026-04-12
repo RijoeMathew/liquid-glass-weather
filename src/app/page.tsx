@@ -340,8 +340,10 @@ export default function WeatherApp() {
                                         </div>
                                         
                                         <div className="flex items-center gap-2 sm:gap-6 flex-1 px-2 sm:px-8 justify-start overflow-hidden">
-                                            <div className="p-1.5 rounded-full bg-white/5 group-hover:scale-110 transition-transform flex-shrink-0 overflow-hidden">
-                                                {getWeatherIcon(day.code, 18, "sm:w-7 sm:h-7")}
+                                        <div className="p-1.5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 aspect-square overflow-hidden">
+                                                <motion.div whileHover={{ scale: 1.2 }} transition={{ type: "spring", stiffness: 300 }}>
+                                                    {getWeatherIcon(day.code, 18, "sm:w-7 sm:h-7")}
+                                                </motion.div>
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] sm:text-xs font-medium text-white/60 group-hover:text-white transition-colors truncate">{day.condition}</span>
