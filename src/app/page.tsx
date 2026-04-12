@@ -340,7 +340,7 @@ export default function WeatherApp() {
                                         </div>
                                         
                                         <div className="flex items-center gap-2 sm:gap-6 flex-1 px-2 sm:px-8 justify-start overflow-hidden">
-                                            <div className="p-1.5 rounded-full bg-white/5 group-hover:scale-110 transition-transform flex-shrink-0">
+                                            <div className="p-1.5 rounded-full bg-white/5 group-hover:scale-110 transition-transform flex-shrink-0 overflow-hidden">
                                                 {getWeatherIcon(day.code, 18, "sm:w-7 sm:h-7")}
                                             </div>
                                             <div className="flex flex-col">
