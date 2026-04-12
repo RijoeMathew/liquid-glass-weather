@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import LiquidBackground from "../components/LiquidBackground";
 import { 
     Cloud, Sun, CloudRain, Wind, Thermometer, MapPin, Loader2, 
-    CloudSnow, CloudLightning, CloudFog, Droplets, Navigation, Calendar
+    CloudSnow, CloudLightning, CloudFog, Droplets, Navigation, Calendar, RefreshCw, AlertCircle
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 interface WeatherData {
     current: {
@@ -35,58 +35,88 @@ export default function WeatherApp() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+    const [usingDefault, setUsingDefault] = useState(false);
+    const [showSkip, setShowSkip] = useState(false);
     const hourlyScrollRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const fetchWeather = async () => {
-            try {
-                setLoading(true);
-                const pos = await new Promise<GeolocationPosition>((res, rej) => {
-                    navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 });
-                });
+    const fetchWeather = async (lat?: number, lon?: number) => {
+        try {
+            console.log("Starting weather fetch...");
+            setLoading(true);
+            let latitude = lat;
+            let longitude = lon;
 
-                const { latitude, longitude } = pos.coords;
-
-                const res = await fetch(
-                    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
-                );
-
-                if (!res.ok) throw new Error("Failed to fetch weather");
-                const data = await res.json();
-
-                setWeather({
-                    current: {
-                        temp: data.current.temperature_2m,
-                        condition: getWeatherDesc(data.current.weather_code),
-                        windspeed: data.current.wind_speed_10m,
-                        humidity: data.current.relative_humidity_2m,
-                        code: data.current.weather_code,
-                    },
-                    hourly: data.hourly.time.map((time: string, i: number) => ({
-                        time,
-                        temp: data.hourly.temperature_2m[i],
-                        code: data.hourly.weather_code[i],
-                    })),
-                    daily: data.daily.time.map((date: string, i: number) => ({
-                        date,
-                        temp_max: data.daily.temperature_2m_max[i],
-                        temp_min: data.daily.temperature_2m_min[i],
-                        condition: getWeatherDesc(data.daily.weather_code[i]),
-                        code: data.daily.weather_code[i],
-                    })).slice(0, 7),
-                });
-            } catch (err) {
-                console.error(err);
-                setError("Location access denied. Please enable GPS to see your local weather.");
-            } finally {
-                setLoading(false);
+            if (latitude === undefined || longitude === undefined) {
+                try {
+                    // Manual 6-second race for Geolocation
+                    console.log("Requesting geolocation...");
+                    const pos = await Promise.race([
+                        new Promise<GeolocationPosition>((res, rej) => {
+                            if (!navigator.geolocation) rej(new Error("Not supported"));
+                            navigator.geolocation.getCurrentPosition(res, rej, { 
+                                timeout: 5000,
+                                enableHighAccuracy: false 
+                            });
+                        }),
+                        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("Timeout")), 6000))
+                    ]);
+                    latitude = pos.coords.latitude;
+                    longitude = pos.coords.longitude;
+                    setUsingDefault(false);
+                    console.log("Location acquired:", latitude, longitude);
+                } catch (geoErr) {
+                    console.warn("Using fallback location (London)");
+                    latitude = 51.5074;
+                    longitude = -0.1278;
+                    setUsingDefault(true);
+                }
             }
-        };
 
+            const res = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
+            );
+
+            if (!res.ok) throw new Error("API Connection Failed");
+            const data = await res.json();
+            console.log("Weather data received");
+
+            setWeather({
+                current: {
+                    temp: data.current.temperature_2m,
+                    condition: getWeatherDesc(data.current.weather_code),
+                    windspeed: data.current.wind_speed_10m,
+                    humidity: data.current.relative_humidity_2m,
+                    code: data.current.weather_code,
+                },
+                hourly: data.hourly.time.map((time: string, i: number) => ({
+                    time,
+                    temp: data.hourly.temperature_2m[i],
+                    code: data.hourly.weather_code[i],
+                })),
+                daily: data.daily.time.map((date: string, i: number) => ({
+                    date,
+                    temp_max: data.daily.temperature_2m_max[i],
+                    temp_min: data.daily.temperature_2m_min[i],
+                    condition: getWeatherDesc(data.daily.weather_code[i]),
+                    code: data.daily.weather_code[i],
+                })).slice(0, 7),
+            });
+            setError(null);
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setError("Unable to reach weather servers. Please check your connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchWeather();
+        // Show skip button after 6 seconds of loading
+        const skipTimer = setTimeout(() => setShowSkip(true), 6000);
+        return () => clearTimeout(skipTimer);
     }, []);
 
-    // Reset scroll when day changes
     useEffect(() => {
         if (hourlyScrollRef.current) {
             hourlyScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
@@ -123,7 +153,7 @@ export default function WeatherApp() {
         return <Cloud size={size} className={`text-gray-400 ${className}`} />;
     }
 
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -131,7 +161,7 @@ export default function WeatherApp() {
         }
     };
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         hidden: { y: 20, opacity: 0 },
         visible: {
             y: 0,
@@ -142,34 +172,55 @@ export default function WeatherApp() {
 
     if (loading) {
         return (
-            <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 gap-6">
+            <div className="h-screen w-full flex flex-col items-center justify-center bg-[#020617] gap-6 text-center p-6">
                 <motion.div
-                    animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                 >
-                    <Loader2 className="w-16 h-16 text-blue-400 animate-spin" />
+                    <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
                 </motion.div>
-                <p className="text-white/50 text-sm tracking-[0.3em] uppercase font-bold">Initializing</p>
+                <div className="space-y-2">
+                    <p className="text-white text-lg font-medium tracking-tight">Syncing Atmosphere</p>
+                    <p className="text-white/40 text-xs tracking-[0.2em] uppercase">Checking Conditions</p>
+                </div>
+
+                <AnimatePresence>
+                    {showSkip && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-8 space-y-4">
+                            <p className="text-white/30 text-xs italic">Taking longer than usual?</p>
+                            <button 
+                                onClick={() => fetchWeather(51.5074, -0.1278)}
+                                className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white/60 text-sm rounded-full border border-white/10 transition-all active:scale-95"
+                            >
+                                Skip & Use Default (London)
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="h-screen w-full flex items-center justify-center p-4 text-center bg-slate-950">
+            <div className="h-screen w-full flex items-center justify-center p-4 text-center bg-[#020617]">
                 <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card p-10 max-w-md space-y-6">
-                    <div className="text-red-400 text-6xl">📍</div>
-                    <h2 className="text-3xl font-bold text-white">Location Access</h2>
-                    <p className="text-red-200/70 text-lg leading-relaxed">{error}</p>
-                    <button onClick={() => window.location.reload()} className="w-full mt-4 px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all border border-white/10 font-semibold">
-                        Try Again
-                    </button>
+                    <AlertCircle className="w-16 h-16 text-red-400 mx-auto" />
+                    <h2 className="text-2xl font-bold text-white">System Error</h2>
+                    <p className="text-red-200/70">{error}</p>
+                    <div className="flex flex-col gap-3">
+                        <button onClick={() => window.location.reload()} className="w-full px-8 py-3 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-2xl transition-all border border-blue-600/30 font-bold">
+                            Reload App
+                        </button>
+                        <button onClick={() => fetchWeather(51.5074, -0.1278)} className="w-full px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl transition-all border border-white/10">
+                            Use Default Location
+                        </button>
+                    </div>
                 </motion.div>
             </div>
         );
     }
 
-    // Filter hourly data for the selected day
     const getSelectedDayHourly = () => {
         if (!weather) return [];
         const startIdx = selectedDayIndex * 24;
@@ -185,84 +236,81 @@ export default function WeatherApp() {
             <AnimatePresence>
                 {weather && (
                     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="w-full max-w-5xl space-y-8">
+                        {usingDefault && (
+                            <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-amber-500/20 border border-amber-500/30 p-3 rounded-2xl text-amber-200 text-[10px] sm:text-xs flex items-center justify-between gap-4 backdrop-blur-md">
+                                <span className="flex items-center gap-2">
+                                    <MapPin size={14} /> GPS unavailable. Showing London weather.
+                                </span>
+                                <button onClick={() => fetchWeather()} className="bg-amber-500/20 hover:bg-amber-500/40 px-3 py-1 rounded-lg transition-colors flex items-center gap-1 font-bold whitespace-nowrap">
+                                    <RefreshCw size={12} /> Sync GPS
+                                </button>
+                            </motion.div>
+                        )}
+
                         {/* Current Weather Card */}
-                        <motion.div variants={itemVariants} className="glass-card p-10 text-center relative overflow-hidden">
+                        <motion.div variants={itemVariants} className="glass-card p-8 md:p-10 text-center relative overflow-hidden">
                             <motion.div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" animate={{ opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 5, repeat: Infinity }} />
                             
                             <div className="relative z-10 space-y-6">
                                 <motion.div className="flex justify-center" animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-                                    {getWeatherIcon(weather.current.code, 120, "drop-shadow-[0_0_25px_rgba(255,255,255,0.4)]")}
+                                    {getWeatherIcon(weather.current.code, 100, "drop-shadow-[0_0_25px_rgba(255,255,255,0.4)]")}
                                 </motion.div>
                                 
                                 <div className="space-y-2">
-                                    <h1 className="text-8xl font-black tracking-tighter text-white">
+                                    <h1 className="text-7xl md:text-8xl font-black tracking-tighter text-white">
                                         {Math.round(weather.current.temp)}°
                                     </h1>
-                                    <p className="text-3xl text-white/90 font-light tracking-wide">
+                                    <p className="text-2xl md:text-3xl text-white/90 font-light tracking-wide">
                                         {weather.current.condition}
                                     </p>
                                 </div>
 
-                                <div className="flex flex-wrap justify-center gap-8 pt-8 border-t border-white/10 mt-8">
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <Wind className="w-6 h-6 text-blue-400" />
-                                        <div className="text-left">
-                                            <p className="text-[10px] uppercase tracking-tighter opacity-50 font-bold">Wind</p>
-                                            <p className="text-lg font-mono">{weather.current.windspeed} <span className="text-sm opacity-50">km/h</span></p>
-                                        </div>
+                                <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/10 mt-8">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <Wind className="w-5 h-5 text-blue-400" />
+                                        <p className="text-[9px] uppercase tracking-tighter opacity-50 font-bold">Wind</p>
+                                        <p className="text-sm font-mono text-white/90">{weather.current.windspeed} km/h</p>
                                     </div>
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <Droplets className="w-6 h-6 text-cyan-400" />
-                                        <div className="text-left">
-                                            <p className="text-[10px] uppercase tracking-tighter opacity-50 font-bold">Humidity</p>
-                                            <p className="text-lg font-mono">{weather.current.humidity}%</p>
-                                        </div>
+                                    <div className="flex flex-col items-center gap-1 border-x border-white/5 px-2">
+                                        <Droplets className="w-5 h-5 text-cyan-400" />
+                                        <p className="text-[9px] uppercase tracking-tighter opacity-50 font-bold">Humidity</p>
+                                        <p className="text-sm font-mono text-white/90">{weather.current.humidity}%</p>
                                     </div>
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <Thermometer className="w-6 h-6 text-red-400" />
-                                        <div className="text-left">
-                                            <p className="text-[10px] uppercase tracking-tighter opacity-50 font-bold">Feel</p>
-                                            <p className="text-lg font-mono">{Math.round(weather.current.temp)}°</p>
-                                        </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <Thermometer className="w-5 h-5 text-red-400" />
+                                        <p className="text-[9px] uppercase tracking-tighter opacity-50 font-bold">Feel</p>
+                                        <p className="text-sm font-mono text-white/90">{Math.round(weather.current.temp)}°</p>
                                     </div>
                                 </div>
                             </div>
                         </motion.div>
 
                         {/* Hourly Forecast */}
-                        <motion.div variants={itemVariants} className="glass-card p-8 space-y-6">
+                        <motion.div variants={itemVariants} className="glass-card p-6 md:p-8 space-y-6">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold flex items-center gap-3 text-white">
+                                <h2 className="text-lg md:text-xl font-bold flex items-center gap-3 text-white">
                                     <Navigation className="w-5 h-5 text-blue-400 rotate-45" /> 
-                                    Hourly Forecast
-                                    <span className="text-white/40 font-medium text-sm ml-2 px-2 py-1 rounded-lg bg-white/5">
+                                    Hourly
+                                    <span className="text-white/40 font-medium text-xs ml-2 px-2 py-1 rounded-lg bg-white/5">
                                         {selectedDayIndex === 0 ? "Today" : new Date(weather.daily[selectedDayIndex].date).toLocaleDateString('en-US', { weekday: 'long' })}
                                     </span>
                                 </h2>
-                                {selectedDayIndex !== 0 && (
-                                    <button 
-                                        onClick={() => setSelectedDayIndex(0)}
-                                        className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full transition-all active:scale-95"
-                                    >
-                                        Today
-                                    </button>
-                                )}
                             </div>
                             
-                            <div ref={hourlyScrollRef} className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-2">
+                            <div ref={hourlyScrollRef} className="flex gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide px-2">
                                 {selectedDayHourly.map((hour, idx) => (
                                     <motion.div 
                                         key={idx}
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: idx * 0.02 }}
-                                        className="flex flex-col items-center min-w-[80px] p-4 rounded-2xl bg-white/5 border border-white/5"
+                                        transition={{ delay: idx * 0.01 }}
+                                        className="flex flex-col items-center min-w-[70px] md:min-w-[80px] p-3 md:p-4 rounded-2xl bg-white/5 border border-white/5"
                                     >
-                                        <span className="text-xs font-bold text-white/40 mb-3">
+                                        <span className="text-[10px] font-bold text-white/40 mb-3">
                                             {new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}
                                         </span>
-                                        {getWeatherIcon(hour.code, 32, "mb-3")}
-                                        <span className="text-xl font-mono font-bold text-white">
+                                        {getWeatherIcon(hour.code, 28, "mb-3")}
+                                        <span className="text-lg font-mono font-bold text-white">
                                             {Math.round(hour.temp)}°
                                         </span>
                                     </motion.div>
@@ -271,36 +319,34 @@ export default function WeatherApp() {
                         </motion.div>
 
                         {/* 7-Day Forecast */}
-                        <motion.div variants={itemVariants} className="glass-card p-8 space-y-8">
-                            <h2 className="text-xl font-bold flex items-center gap-3 text-white">
-                                <Calendar className="w-5 h-5 text-blue-400" /> Daily Forecast
-                                <span className="text-xs font-normal text-white/40 ml-auto">Click a day to view hourly details</span>
+                        <motion.div variants={itemVariants} className="glass-card p-6 md:p-8 space-y-8">
+                            <h2 className="text-lg md:text-xl font-bold flex items-center gap-3 text-white">
+                                <Calendar className="w-5 h-5 text-blue-400" /> 7-Day Forecast
                             </h2>
-                            <div className="grid gap-3">
+                            <div className="grid gap-2 md:gap-3">
                                 {weather.daily.map((day, idx) => (
                                     <motion.div 
                                         key={idx} 
                                         onClick={() => setSelectedDayIndex(idx)}
-                                        whileHover={{ x: 10, backgroundColor: "rgba(255,255,255,0.05)" }}
-                                        className={`flex items-center justify-between py-4 px-4 rounded-2xl group cursor-pointer transition-all border ${selectedDayIndex === idx ? 'bg-white/10 border-white/20' : 'border-transparent'}`}
+                                        whileHover={{ x: 5, backgroundColor: "rgba(255,255,255,0.05)" }}
+                                        className={`flex items-center justify-between py-3 px-3 md:py-4 md:px-4 rounded-2xl group cursor-pointer transition-all border ${selectedDayIndex === idx ? 'bg-white/10 border-white/20' : 'border-transparent'}`}
                                     >
-                                        <div className="w-24">
-                                            <p className={`text-lg font-bold ${selectedDayIndex === idx ? 'text-blue-400' : 'text-white'}`}>
+                                        <div className="w-16 md:w-24">
+                                            <p className={`text-sm md:text-lg font-bold ${selectedDayIndex === idx ? 'text-blue-400' : 'text-white'}`}>
                                                 {idx === 0 ? "Today" : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                                             </p>
-                                            <p className="text-[10px] text-white/30 uppercase font-black">{day.date}</p>
                                         </div>
                                         
-                                        <div className="flex items-center gap-6 flex-1 px-8 justify-start">
-                                            <div className="p-2 rounded-full bg-white/5 group-hover:scale-110 transition-transform">
-                                                {getWeatherIcon(day.code, 28)}
+                                        <div className="flex items-center gap-3 md:gap-6 flex-1 px-4 md:px-8 justify-start">
+                                            <div className="p-1.5 rounded-full bg-white/5 group-hover:scale-110 transition-transform">
+                                                {getWeatherIcon(day.code, 20)}
                                             </div>
-                                            <span className="text-sm font-medium text-white/60 group-hover:text-white transition-colors">{day.condition}</span>
+                                            <span className="text-xs font-medium text-white/60 group-hover:text-white transition-colors truncate">{day.condition}</span>
                                         </div>
                                         
-                                        <div className="flex gap-6 text-xl font-mono">
-                                            <span className="text-white font-bold w-12 text-right">{Math.round(day.temp_max)}°</span>
-                                            <span className="text-white/30 w-12 text-right">{Math.round(day.temp_min)}°</span>
+                                        <div className="flex gap-4 md:gap-6 text-sm md:text-xl font-mono">
+                                            <span className="text-white font-bold w-10 text-right">{Math.round(day.temp_max)}°</span>
+                                            <span className="text-white/30 w-10 text-right">{Math.round(day.temp_min)}°</span>
                                         </div>
                                     </motion.div>
                                 ))}

@@ -4,9 +4,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Setting basePath to the repository name for GitHub Pages
   basePath: '/liquid-glass-weather',
-  assetPrefix: '/liquid-glass-weather',
+  // No assetPrefix needed with GitHub Actions + basePath
+  trailingSlash: true,
 };
 
 module.exports = nextConfig;
