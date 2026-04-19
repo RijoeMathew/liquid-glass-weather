@@ -13,7 +13,8 @@ export default function VibrantBackground({ code }: Props) {
   const isCloudy = code && (code >= 1 && code <= 3 || code >= 45 && code <= 48);
 
   const sphere = useMemo(() => {
-    const count = isRain ? 5000 : isSnow ? 3000 : isCloudy ? 1000 : 500;
+    // Reduced density for better readability
+    const count = isRain ? 2000 : isSnow ? 1500 : isCloudy ? 800 : 400;
     return random.inSphere(new Float32Array(count * 3), { radius: 1.5 });
   }, [code]);
 
@@ -24,8 +25,9 @@ export default function VibrantBackground({ code }: Props) {
           <Points positions={sphere as Float32Array} stride={3} frustumCulled={false}>
             <PointMaterial
               transparent
+              opacity={0.5} // Lower opacity for better text contrast
               color={isRain ? "#60a5fa" : isSnow ? "#f8fafc" : isCloudy ? "#94a3b8" : "#fbbf24"}
-              size={isRain ? 0.02 : 0.03}
+              size={isRain ? 0.015 : 0.02}
               sizeAttenuation={true}
               depthWrite={false}
             />
