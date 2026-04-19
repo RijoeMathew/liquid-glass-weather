@@ -6,7 +6,7 @@ html, body {
   overflow-x: hidden;
   background: #020617;
   color: white;
-  min-height: 100vh;
+  min-height: 100dvh;
   font-family: 'Inter', sans-serif;
 }
 
