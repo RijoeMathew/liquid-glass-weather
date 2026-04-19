@@ -1,38 +1,35 @@
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Sphere, MeshDistortMaterial, Float } from "@react-three/drei";
-import { useRef } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Points, PointMaterial, Float } from "@react-three/drei";
+import * as random from "maath/random";
+import { useMemo } from "react";
 
 interface Props {
   code?: number;
 }
 
-const getColors = (code?: number) => {
-  if (code === 0) return { color: "#3b82f6", speed: 2, distort: 0.4 }; // Clear: Blue
-  if (code && code <= 3) return { color: "#94a3b8", speed: 1, distort: 0.3 }; // Cloudy: Gray
-  if (code && code <= 55) return { color: "#1e3a8a", speed: 4, distort: 0.6 }; // Rain: Dark Blue
-  if (code && code <= 77) return { color: "#e0f2fe", speed: 0.5, distort: 0.2 }; // Snow: Light Blue/White
-  if (code && code <= 99) return { color: "#7c3aed", speed: 6, distort: 0.8 }; // Thunder: Purple
-  return { color: "#3b82f6", speed: 2, distort: 0.4 };
-};
-
 export default function VibrantBackground({ code }: Props) {
-  const config = getColors(code);
+  const isRain = code && (code >= 51 && code <= 67 || code >= 80 && code <= 82);
+  const isSnow = code && (code >= 71 && code <= 77 || code >= 85 && code <= 86);
+  const isCloudy = code && (code >= 1 && code <= 3 || code >= 45 && code <= 48);
+
+  const sphere = useMemo(() => {
+    const count = isRain ? 5000 : isSnow ? 3000 : isCloudy ? 1000 : 500;
+    return random.inSphere(new Float32Array(count * 3), { radius: 1.5 });
+  }, [code]);
 
   return (
     <div className="fixed inset-0 -z-10 bg-slate-950 transition-colors duration-1000">
-      <Canvas>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} />
-        <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-          <Sphere args={[1, 64, 64]} scale={2}>
-            <MeshDistortMaterial
-              color={config.color}
-              attach="material"
-              distort={config.distort}
-              speed={config.speed}
-              roughness={0.2}
+      <Canvas camera={{ position: [0, 0, 1] }}>
+        <Float speed={1} rotationIntensity={0.5} floatIntensity={0.5}>
+          <Points positions={sphere as Float32Array} stride={3} frustumCulled={false}>
+            <PointMaterial
+              transparent
+              color={isRain ? "#60a5fa" : isSnow ? "#f8fafc" : isCloudy ? "#94a3b8" : "#fbbf24"}
+              size={isRain ? 0.02 : 0.03}
+              sizeAttenuation={true}
+              depthWrite={false}
             />
-          </Sphere>
+          </Points>
         </Float>
       </Canvas>
     </div>
