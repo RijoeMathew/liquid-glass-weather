@@ -4,24 +4,14 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background: #0f172a;
+  background: #020617;
   color: white;
   min-height: 100vh;
+  font-family: 'Inter', sans-serif;
 }
 
 @layer components {
-  .glass-card {
-    /* iOS Liquid Glass Effect: Higher blur, stronger border highlights, subtle inner glow */
-    @apply backdrop-blur-[60px] bg-white/[0.08] border border-white/30 rounded-4xl 
-           shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] 
-           [box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_1px_1px_rgba(255,255,255,0.3)];
-  }
-  
-  .glass-panel {
-    @apply backdrop-blur-2xl bg-white/[0.05] border border-white/10 rounded-3xl;
-  }
-
-  .liquid-gradient {
-    background: radial-gradient(circle at 50% -20%, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 1) 70%);
+  .modern-card {
+    @apply backdrop-blur-[40px] bg-white/[0.03] border border-white/5 rounded-3xl p-6 transition-all duration-300;
   }
 }

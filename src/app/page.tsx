@@ -253,7 +253,7 @@ export default function WeatherApp() {
                         )}
 
                         {/* Current Weather Card */}
-                        <motion.div variants={itemVariants} className="glass-card p-6 sm:p-10 text-center relative overflow-hidden">
+                        <motion.div variants={itemVariants} className="modern-card text-center relative overflow-hidden">
                             <motion.div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" animate={{ opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 5, repeat: Infinity }} />
                             
                             <div className="relative z-10 space-y-4 sm:space-y-6">
