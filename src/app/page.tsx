@@ -9,9 +9,9 @@ import partlyCloudyAnim from "../../public/animations/partly-cloudy-day.json";
 import rainAnim from "../../public/animations/rain.json";
 import snowAnim from "../../public/animations/snow.json";
 import thunderAnim from "../../public/animations/thunder.json";
-import { 
-    Cloud, Sun, Moon, CloudRain, Wind, Thermometer, MapPin, Loader2, 
-    CloudSnow, CloudLightning, CloudFog, Droplets, Navigation, Calendar, RefreshCw, AlertCircle
+import {
+    Wind, Thermometer, MapPin, Loader2,
+    Droplets, Navigation, Calendar, RefreshCw, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
@@ -59,9 +59,9 @@ export default function WeatherApp() {
                     const pos = await Promise.race([
                         new Promise<GeolocationPosition>((res, rej) => {
                             if (!navigator.geolocation) rej(new Error("Not supported"));
-                            navigator.geolocation.getCurrentPosition(res, rej, { 
+                            navigator.geolocation.getCurrentPosition(res, rej, {
                                 timeout: 5000,
-                                enableHighAccuracy: false 
+                                enableHighAccuracy: false
                             });
                         }),
                         new Promise<never>((_, rej) => setTimeout(() => rej(new Error("Timeout")), 6000))
@@ -69,7 +69,7 @@ export default function WeatherApp() {
                     latitude = pos.coords.latitude;
                     longitude = pos.coords.longitude;
                     setUsingDefault(false);
-                } catch (geoErr) {
+                } catch {
                     latitude = 43.6532;
                     longitude = -79.3832;
                     setUsingDefault(true);
@@ -107,7 +107,7 @@ export default function WeatherApp() {
                 })).slice(0, 7),
             });
             setError(null);
-        } catch (err) {
+        } catch {
             setError("Unable to reach weather servers. Please check your connection.");
         } finally {
             setLoading(false);
@@ -141,21 +141,43 @@ export default function WeatherApp() {
         return "Unknown";
     }
 
-    function getWeatherIcon(code: number, size: number = 24, className: string = "", time?: string) {
-        // Map weather code to Lottie animation
+    // Bug fixes applied:
+    // 1. partlyCloudyAnim now used for codes 1-2 (few/scattered clouds)
+    // 2. Fog codes (45-48) correctly map to cloudyAnim, not rainAnim
+    // 3. Removed unused `time` parameter
+    function getWeatherIcon(code: number, size: number = 24, className: string = "") {
         let animation;
-        if (code === 0) animation = clearDayAnim;
-        else if (code <= 3) animation = cloudyAnim;
-        else if (code <= 55) animation = rainAnim;
-        else if (code <= 77) animation = snowAnim;
-        else if (code <= 99) animation = thunderAnim;
-        else animation = cloudyAnim;
+        if (code === 0) {
+            animation = clearDayAnim;
+        } else if (code <= 2) {
+            // Few clouds / partly cloudy
+            animation = partlyCloudyAnim;
+        } else if (code <= 48) {
+            // Overcast or foggy — no fog animation available, use cloudy
+            animation = cloudyAnim;
+        } else if (code <= 67 || (code >= 80 && code <= 82)) {
+            // Drizzle, rain, freezing rain, rain showers
+            animation = rainAnim;
+        } else if (code <= 77 || (code >= 85 && code <= 86)) {
+            // Snow and snow showers
+            animation = snowAnim;
+        } else {
+            // Thunderstorm (95–99)
+            animation = thunderAnim;
+        }
 
         return (
             <div style={{ width: size, height: size }} className={className}>
                 <Lottie animationData={animation} loop={true} />
             </div>
         );
+    }
+
+    // Bug fix: open-meteo date strings ("2024-01-15") parse as midnight UTC.
+    // In timezones behind UTC this rolls back one calendar day.
+    // Appending T12:00:00 treats the date as local noon, safe in all timezones.
+    function formatDayName(dateStr: string): string {
+        return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' });
     }
 
     const containerVariants: Variants = {
@@ -177,7 +199,7 @@ export default function WeatherApp() {
 
     if (loading) {
         return (
-            <div className="h-dvh w-full flex flex-col items-center justify-center bg-[#020617] gap-6 text-center p-6">
+            <div className="h-screen w-full flex flex-col items-center justify-center bg-[#020617] gap-6 text-center p-6">
                 <motion.div
                     animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -193,12 +215,13 @@ export default function WeatherApp() {
                     {showSkip && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-8 space-y-4">
                             <p className="text-white/30 text-xs italic">Taking longer than usual?</p>
-                            <button 
-                            onClick={() => fetchWeather(43.6532, -79.3832)}
-                            className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white/60 text-sm rounded-full border border-white/10 transition-all active:scale-95"
+                            <button
+                                onClick={() => fetchWeather(43.6532, -79.3832)}
+                                className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white/60 text-sm rounded-full border border-white/10 transition-all active:scale-95"
                             >
-                            Skip & Use Default (Toronto)
-                            </button>                        </motion.div>
+                                Skip & Use Default (Toronto)
+                            </button>
+                        </motion.div>
                     )}
                 </AnimatePresence>
             </div>
@@ -207,7 +230,7 @@ export default function WeatherApp() {
 
     if (error) {
         return (
-            <div className="h-dvh w-full flex items-center justify-center p-4 text-center bg-[#020617]">
+            <div className="h-screen w-full flex items-center justify-center p-4 text-center bg-[#020617]">
                 <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card p-10 max-w-md space-y-6">
                     <AlertCircle className="w-16 h-16 text-red-400 mx-auto" />
                     <h2 className="text-2xl font-bold text-white">System Error</h2>
@@ -234,8 +257,9 @@ export default function WeatherApp() {
     const selectedDayHourly = getSelectedDayHourly();
 
     return (
-        <main className="min-h-dvh p-4 sm:p-8 md:p-12 lg:p-20 flex flex-col items-center relative z-0 overflow-x-hidden">
-            <LiquidBackground code={weather?.current.code} />
+        <>
+        <LiquidBackground code={weather?.current.code} />
+        <main className="min-h-dvh p-4 sm:p-8 md:p-12 lg:p-20 flex flex-col items-center relative z-0">
 
             <AnimatePresence>
                 {weather && (
@@ -254,12 +278,12 @@ export default function WeatherApp() {
                         {/* Current Weather Card */}
                         <motion.div variants={itemVariants} className="modern-card text-center relative overflow-hidden">
                             <motion.div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" animate={{ opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 5, repeat: Infinity }} />
-                            
+
                             <div className="relative z-10 space-y-4 sm:space-y-6">
                                 <motion.div className="flex justify-center" animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
                                     {getWeatherIcon(weather.current.code, 80, "sm:w-[100px] sm:h-[100px] drop-shadow-[0_0_25px_rgba(255,255,255,0.4)]")}
                                 </motion.div>
-                                
+
                                 <div className="space-y-1">
                                     <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter text-white">
                                         {Math.round(weather.current.temp)}°
@@ -293,17 +317,17 @@ export default function WeatherApp() {
                         <motion.div variants={itemVariants} className="glass-card p-5 sm:p-8 space-y-4 sm:space-y-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-base sm:text-xl font-bold flex items-center gap-2 sm:gap-3 text-white">
-                                    <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 rotate-45" /> 
+                                    <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 rotate-45" />
                                     Hourly
                                     <span className="text-white/40 font-medium text-[10px] sm:text-xs ml-1 sm:ml-2 px-1.5 py-0.5 rounded-lg bg-white/5 whitespace-nowrap">
-                                        {selectedDayIndex === 0 ? "Today" : new Date(new Date(weather.daily[selectedDayIndex].date).getTime() + 86400000).toLocaleDateString('en-US', { weekday: 'short' })}
+                                        {selectedDayIndex === 0 ? "Today" : formatDayName(weather.daily[selectedDayIndex].date)}
                                     </span>
                                 </h2>
                             </div>
-                            
+
                             <div ref={hourlyScrollRef} className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 sm:pb-6 scrollbar-hide px-1">
                                 {selectedDayHourly.map((hour, idx) => (
-                                    <motion.div 
+                                    <motion.div
                                         key={idx}
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -313,7 +337,7 @@ export default function WeatherApp() {
                                         <span className="text-[9px] sm:text-[10px] font-bold text-white/40 mb-2 sm:mb-3 whitespace-nowrap">
                                             {new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}
                                         </span>
-                                        {getWeatherIcon(hour.code, 24, "sm:w-8 sm:h-8 mb-2 sm:mb-3", hour.time)}
+                                        {getWeatherIcon(hour.code, 24, "sm:w-8 sm:h-8 mb-2 sm:mb-3")}
                                         <span className="text-base sm:text-lg font-mono font-bold text-white">
                                             {Math.round(hour.temp)}°
                                         </span>
@@ -332,20 +356,20 @@ export default function WeatherApp() {
                             </h2>
                             <div className="grid gap-2">
                                 {weather.daily.map((day, idx) => (
-                                    <motion.div 
-                                        key={idx} 
+                                    <motion.div
+                                        key={idx}
                                         onClick={() => setSelectedDayIndex(idx)}
                                         whileHover={{ x: 5, backgroundColor: "rgba(255,255,255,0.05)" }}
                                         className={`flex items-center justify-between py-3 px-3 sm:py-4 sm:px-4 rounded-xl sm:rounded-2xl group cursor-pointer transition-all border ${selectedDayIndex === idx ? 'bg-white/10 border-white/20' : 'border-transparent'}`}
                                     >
                                         <div className="w-12 sm:w-24">
                                             <p className={`text-sm sm:text-lg font-bold ${selectedDayIndex === idx ? 'text-blue-400' : 'text-white'}`}>
-                                                {idx === 0 ? "Today" : new Date(new Date(day.date).getTime() + 86400000).toLocaleDateString('en-US', { weekday: 'short' })}
+                                                {idx === 0 ? "Today" : formatDayName(day.date)}
                                             </p>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-2 sm:gap-6 flex-1 px-2 sm:px-8 justify-start overflow-hidden">
-                                        <div className="p-1.5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 aspect-square overflow-hidden">
+                                            <div className="p-1.5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 aspect-square overflow-hidden">
                                                 <motion.div whileHover={{ scale: 1.2 }} transition={{ type: "spring", stiffness: 300 }}>
                                                     {getWeatherIcon(day.code, 18, "sm:w-7 sm:h-7")}
                                                 </motion.div>
@@ -357,7 +381,7 @@ export default function WeatherApp() {
                                                 )}
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex gap-3 sm:gap-6 text-sm sm:text-xl font-mono flex-shrink-0">
                                             <span className="text-white font-bold w-8 sm:w-10 text-right">{Math.round(day.temp_max)}°</span>
                                             <span className="text-white/30 w-8 sm:w-10 text-right">{Math.round(day.temp_min)}°</span>
@@ -370,5 +394,6 @@ export default function WeatherApp() {
                 )}
             </AnimatePresence>
         </main>
+        </>
     );
 }
