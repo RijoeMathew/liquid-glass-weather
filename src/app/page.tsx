@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import LiquidBackground from "../components/LiquidBackground";
+import VibrantBackground from "../components/VibrantBackground";
+import Lottie from "lottie-react";
+import clearDayAnim from "../../public/animations/clear-day.json";
+import cloudyAnim from "../../public/animations/cloudy.json";
+import partlyCloudyAnim from "../../public/animations/partly-cloudy-day.json";
+import rainAnim from "../../public/animations/rain.json";
+import snowAnim from "../../public/animations/snow.json";
+import thunderAnim from "../../public/animations/thunder.json";
 import { 
     Cloud, Sun, Moon, CloudRain, Wind, Thermometer, MapPin, Loader2, 
     CloudSnow, CloudLightning, CloudFog, Droplets, Navigation, Calendar, RefreshCw, AlertCircle
@@ -135,21 +142,20 @@ export default function WeatherApp() {
     }
 
     function getWeatherIcon(code: number, size: number = 24, className: string = "", time?: string) {
-        const hour = time ? new Date(time).getHours() : new Date().getHours();
-        const isNight = hour < 6 || hour >= 18;
+        // Map weather code to Lottie animation
+        let animation;
+        if (code === 0) animation = clearDayAnim;
+        else if (code <= 3) animation = cloudyAnim;
+        else if (code <= 55) animation = rainAnim;
+        else if (code <= 77) animation = snowAnim;
+        else if (code <= 99) animation = thunderAnim;
+        else animation = cloudyAnim;
 
-        if (code === 0) return isNight ? <Moon size={size} className={`text-slate-300 ${className}`} /> : <Sun size={size} className={`text-yellow-400 ${className}`} />;
-        if (code <= 3) return <Cloud size={size} className={`text-slate-400 ${className}`} />;
-        if (code <= 48) return <CloudFog size={size} className={`text-slate-400 ${className}`} />;
-        if (code <= 55) return <CloudRain size={size} className={`text-blue-300 ${className}`} />;
-        if (code <= 65) return <CloudRain size={size} className={`text-blue-500 ${className}`} />;
-        if (code <= 67) return <CloudSnow size={size} className={`text-blue-200 ${className}`} />;
-        if (code <= 77) return <CloudSnow size={size} className={`text-white ${className}`} />;
-        if (code <= 82) return <CloudRain size={size} className={`text-blue-400 ${className}`} />;
-        if (code <= 86) return <CloudSnow size={size} className={`text-white ${className}`} />;
-        if (code === 95) return <CloudLightning size={size} className={`text-purple-400 ${className}`} />;
-        if (code <= 99) return <CloudLightning size={size} className={`text-purple-600 ${className}`} />;
-        return <Cloud size={size} className={`text-gray-400 ${className}`} />;
+        return (
+            <div style={{ width: size, height: size }} className={className}>
+                <Lottie animationData={animation} loop={true} />
+            </div>
+        );
     }
 
     const containerVariants: Variants = {
@@ -230,7 +236,7 @@ export default function WeatherApp() {
 
     return (
         <main className="min-h-screen p-4 sm:p-8 md:p-12 lg:p-20 flex flex-col items-center relative z-0 overflow-x-hidden">
-            <LiquidBackground code={weather?.current.code} time={new Date().toISOString()} />
+            <VibrantBackground />
 
             <AnimatePresence>
                 {weather && (
