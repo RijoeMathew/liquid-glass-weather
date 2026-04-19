@@ -27,41 +27,41 @@ export default function LiquidBackground({ code = 0, time }: Props) {
   }, [time]);
 
   const particles = useMemo(() => {
-    const count = (category === 'rain' || category === 'thunder') ? 40 : category === 'snow' ? 30 : 0;
+    const count = (category === 'rain' || category === 'thunder') ? 40 : category === 'snow' ? 30 : category === 'cloudy' ? 20 : 0;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       delay: Math.random() * 5,
       duration: (category === 'rain' || category === 'thunder') ? 0.5 + Math.random() * 0.3 : 4 + Math.random() * 5,
-      size: Math.random() * (category === 'snow' ? 4 : 1.5) + 1,
+      size: Math.random() * (category === 'snow' ? 4 : 1.5) + (category === 'cloudy' ? 20 : 1),
     }));
   }, [category]);
 
   const config = useMemo(() => {
     if (isNight) {
       return {
-        clear: { colors: ["rgba(30, 58, 138, 0.4)", "rgba(17, 24, 39, 0.4)", "rgba(76, 29, 149, 0.3)"] },
-        cloudy: { colors: ["rgba(17, 24, 39, 0.6)", "rgba(31, 41, 55, 0.5)", "rgba(55, 65, 81, 0.4)"] },
-        fog: { colors: ["rgba(31, 41, 55, 0.6)", "rgba(55, 65, 81, 0.5)", "rgba(75, 85, 99, 0.4)"] },
-        rain: { colors: ["rgba(30, 58, 138, 0.6)", "rgba(17, 24, 39, 0.6)", "rgba(30, 41, 59, 0.5)"] },
-        snow: { colors: ["rgba(209, 213, 219, 0.2)", "rgba(243, 244, 246, 0.1)", "rgba(156, 163, 175, 0.2)"] },
-        thunder: { colors: ["rgba(49, 46, 129, 0.7)", "rgba(17, 24, 39, 0.8)", "rgba(88, 28, 135, 0.6)"] }
+        clear: { bg: "bg-[#020617]", colors: ["rgba(30, 58, 138, 0.4)", "rgba(17, 24, 39, 0.4)", "rgba(76, 29, 149, 0.3)"] },
+        cloudy: { bg: "bg-[#0f172a]", colors: ["rgba(30, 41, 59, 0.6)", "rgba(51, 65, 85, 0.5)", "rgba(71, 85, 105, 0.4)"] },
+        fog: { bg: "bg-[#1e293b]", colors: ["rgba(31, 41, 55, 0.6)", "rgba(55, 65, 81, 0.5)", "rgba(75, 85, 99, 0.4)"] },
+        rain: { bg: "bg-[#0f172a]", colors: ["rgba(30, 58, 138, 0.6)", "rgba(17, 24, 39, 0.6)", "rgba(30, 41, 59, 0.5)"] },
+        snow: { bg: "bg-[#0f172a]", colors: ["rgba(209, 213, 219, 0.2)", "rgba(243, 244, 246, 0.1)", "rgba(156, 163, 175, 0.2)"] },
+        thunder: { bg: "bg-[#020617]", colors: ["rgba(49, 46, 129, 0.7)", "rgba(17, 24, 39, 0.8)", "rgba(88, 28, 135, 0.6)"] }
       }[category];
     }
     return {
-      clear: { colors: ["rgba(14, 165, 233, 0.3)", "rgba(245, 158, 11, 0.2)", "rgba(56, 189, 248, 0.2)"] },
-      cloudy: { colors: ["rgba(148, 163, 184, 0.3)", "rgba(96, 165, 250, 0.2)", "rgba(226, 232, 240, 0.2)"] },
-      fog: { colors: ["rgba(203, 213, 225, 0.4)", "rgba(148, 163, 184, 0.3)", "rgba(241, 245, 249, 0.2)"] },
-      rain: { colors: ["rgba(30, 58, 138, 0.5)", "rgba(49, 46, 129, 0.4)", "rgba(30, 64, 175, 0.3)"] },
-      snow: { colors: ["rgba(186, 230, 253, 0.2)", "rgba(241, 245, 249, 0.2)", "rgba(148, 163, 184, 0.3)"] },
-      thunder: { colors: ["rgba(88, 28, 135, 0.5)", "rgba(30, 58, 138, 0.5)", "rgba(76, 29, 149, 0.4)"] }
+      clear: { bg: "bg-sky-500", colors: ["rgba(56, 189, 248, 0.6)", "rgba(14, 165, 233, 0.5)", "rgba(186, 230, 253, 0.4)"] },
+      cloudy: { bg: "bg-slate-400", colors: ["rgba(203, 213, 225, 0.6)", "rgba(148, 163, 184, 0.5)", "rgba(226, 232, 240, 0.4)"] },
+      fog: { bg: "bg-slate-300", colors: ["rgba(203, 213, 225, 0.4)", "rgba(148, 163, 184, 0.3)", "rgba(241, 245, 249, 0.2)"] },
+      rain: { bg: "bg-slate-500", colors: ["rgba(71, 85, 105, 0.5)", "rgba(51, 65, 85, 0.4)", "rgba(30, 41, 59, 0.3)"] },
+      snow: { bg: "bg-sky-100", colors: ["rgba(186, 230, 253, 0.4)", "rgba(241, 245, 249, 0.3)", "rgba(148, 163, 184, 0.2)"] },
+      thunder: { bg: "bg-slate-700", colors: ["rgba(76, 29, 149, 0.5)", "rgba(30, 58, 138, 0.5)", "rgba(17, 24, 39, 0.4)"] }
     }[category];
   }, [category, isNight]);
 
   const noiseSvg = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#020617]">
+    <div className={`fixed inset-0 -z-10 overflow-hidden ${config.bg} transition-colors duration-1000`}>
       {/* Mesh Blobs */}
       <motion.div
         animate={{ x: [0, 50, -30, 0], y: [0, -40, 60, 0], scale: [1, 1.2, 0.9, 1] }}
@@ -91,7 +91,7 @@ export default function LiquidBackground({ code = 0, time }: Props) {
               initial={{ y: "-10vh", x: p.left }}
               animate={{ y: "110vh" }}
               transition={{ duration: p.duration, repeat: Infinity, ease: "linear", delay: p.delay }}
-              className="absolute w-[2px] h-20 bg-gradient-to-b from-transparent via-blue-400/20 to-transparent"
+              className="absolute w-[2px] h-20 bg-gradient-to-b from-transparent via-white/20 to-transparent"
               style={{ transform: 'rotate(12deg)' }}
             />
           ))}
@@ -101,8 +101,18 @@ export default function LiquidBackground({ code = 0, time }: Props) {
               initial={{ y: "-10vh", x: p.left }}
               animate={{ y: "110vh", x: [p.left, `calc(${p.left} + 20px)`, p.left] }}
               transition={{ y: { duration: p.duration, repeat: Infinity, ease: "linear", delay: p.delay }, x: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
-              className="absolute rounded-full blur-[2px] bg-white/30"
+              className="absolute rounded-full blur-[2px] bg-white/50"
               style={{ width: p.size, height: p.size }}
+            />
+          ))}
+          {category === 'cloudy' && particles.map((p) => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, x: p.left, y: "40vh" }}
+              animate={{ opacity: [0, 0.4, 0], x: [`calc(${p.left} - 50px)`, `calc(${p.left} + 50px)`] }}
+              transition={{ duration: 10 + Math.random() * 10, repeat: Infinity, ease: "linear", delay: p.delay }}
+              className="absolute rounded-full blur-[40px] bg-white/30"
+              style={{ width: p.size * 5, height: p.size * 2 }}
             />
           ))}
           {category === 'thunder' && (

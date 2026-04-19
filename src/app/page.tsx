@@ -139,7 +139,7 @@ export default function WeatherApp() {
         const isNight = hour < 6 || hour >= 18;
 
         if (code === 0) return isNight ? <Moon size={size} className={`text-slate-300 ${className}`} /> : <Sun size={size} className={`text-yellow-400 ${className}`} />;
-        if (code <= 3) return isNight ? <Moon size={size} className={`text-slate-200 ${className}`} /> : <Sun size={size} className={`text-yellow-200 ${className}`} />;
+        if (code <= 3) return <Cloud size={size} className={`text-slate-400 ${className}`} />;
         if (code <= 48) return <CloudFog size={size} className={`text-slate-400 ${className}`} />;
         if (code <= 55) return <CloudRain size={size} className={`text-blue-300 ${className}`} />;
         if (code <= 65) return <CloudRain size={size} className={`text-blue-500 ${className}`} />;
