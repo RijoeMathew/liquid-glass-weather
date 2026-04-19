@@ -194,12 +194,11 @@ export default function WeatherApp() {
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-8 space-y-4">
                             <p className="text-white/30 text-xs italic">Taking longer than usual?</p>
                             <button 
-                                onClick={() => fetchWeather(51.5074, -0.1278)}
-                                className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white/60 text-sm rounded-full border border-white/10 transition-all active:scale-95"
+                            onClick={() => fetchWeather(43.6532, -79.3832)}
+                            className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white/60 text-sm rounded-full border border-white/10 transition-all active:scale-95"
                             >
-                                Skip & Use Default (London)
-                            </button>
-                        </motion.div>
+                            Skip & Use Default (Toronto)
+                            </button>                        </motion.div>
                     )}
                 </AnimatePresence>
             </div>
