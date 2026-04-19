@@ -14,4 +14,18 @@ html, body {
   .modern-card {
     @apply backdrop-blur-[40px] bg-white/[0.03] border border-white/5 rounded-3xl p-6 transition-all duration-300;
   }
+
+  /* Used by hourly and 7-day forecast cards */
+  .glass-card {
+    @apply backdrop-blur-[40px] bg-white/[0.05] border border-white/10 rounded-3xl transition-all duration-300;
+  }
+}
+
+/* Hide scrollbars while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -14,7 +14,8 @@ export default function LiquidBackground({ code = 0, time }: Props) {
   const category = useMemo((): WeatherCategory => {
     if (code === 0) return "clear";
     if (code >= 1 && code <= 3) return "cloudy";
-    if (code >= 45 && code <= 48) return "cloudy";
+    // Bug fix: codes 45–48 are fog — previously fell through to "clear"
+    if (code >= 45 && code <= 48) return "fog";
     if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
     if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "snow";
     if (code >= 95) return "thunder";
@@ -27,7 +28,10 @@ export default function LiquidBackground({ code = 0, time }: Props) {
   }, [time]);
 
   const particles = useMemo(() => {
-    const count = (category === 'rain' || category === 'thunder') ? 40 : category === 'snow' ? 30 : category === 'cloudy' ? 20 : 0;
+    const count = (category === 'rain' || category === 'thunder') ? 40
+      : category === 'snow' ? 30
+      : category === 'cloudy' ? 20
+      : 0;
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
@@ -40,21 +44,21 @@ export default function LiquidBackground({ code = 0, time }: Props) {
   const config = useMemo(() => {
     if (isNight) {
       return {
-        clear: { bg: "bg-[#020617]", colors: ["rgba(30, 58, 138, 0.4)", "rgba(17, 24, 39, 0.4)", "rgba(76, 29, 149, 0.3)"] },
-        cloudy: { bg: "bg-[#0f172a]", colors: ["rgba(30, 41, 59, 0.6)", "rgba(51, 65, 85, 0.5)", "rgba(71, 85, 105, 0.4)"] },
-        fog: { bg: "bg-[#1e293b]", colors: ["rgba(31, 41, 55, 0.6)", "rgba(55, 65, 81, 0.5)", "rgba(75, 85, 99, 0.4)"] },
-        rain: { bg: "bg-[#0f172a]", colors: ["rgba(30, 58, 138, 0.6)", "rgba(17, 24, 39, 0.6)", "rgba(30, 41, 59, 0.5)"] },
-        snow: { bg: "bg-[#0f172a]", colors: ["rgba(209, 213, 219, 0.2)", "rgba(243, 244, 246, 0.1)", "rgba(156, 163, 175, 0.2)"] },
-        thunder: { bg: "bg-[#020617]", colors: ["rgba(49, 46, 129, 0.7)", "rgba(17, 24, 39, 0.8)", "rgba(88, 28, 135, 0.6)"] }
+        clear:   { bg: "bg-[#020617]", colors: ["rgba(30, 58, 138, 0.4)", "rgba(17, 24, 39, 0.4)", "rgba(76, 29, 149, 0.3)"] },
+        cloudy:  { bg: "bg-[#0f172a]", colors: ["rgba(30, 41, 59, 0.6)", "rgba(51, 65, 85, 0.5)", "rgba(71, 85, 105, 0.4)"] },
+        fog:     { bg: "bg-[#1e293b]", colors: ["rgba(31, 41, 55, 0.6)", "rgba(55, 65, 81, 0.5)", "rgba(75, 85, 99, 0.4)"] },
+        rain:    { bg: "bg-[#0f172a]", colors: ["rgba(30, 58, 138, 0.6)", "rgba(17, 24, 39, 0.6)", "rgba(30, 41, 59, 0.5)"] },
+        snow:    { bg: "bg-[#0f172a]", colors: ["rgba(209, 213, 219, 0.2)", "rgba(243, 244, 246, 0.1)", "rgba(156, 163, 175, 0.2)"] },
+        thunder: { bg: "bg-[#020617]", colors: ["rgba(49, 46, 129, 0.7)", "rgba(17, 24, 39, 0.8)", "rgba(88, 28, 135, 0.6)"] },
       }[category];
     }
     return {
-      clear: { bg: "bg-sky-500", colors: ["rgba(56, 189, 248, 0.6)", "rgba(14, 165, 233, 0.5)", "rgba(186, 230, 253, 0.4)"] },
-      cloudy: { bg: "bg-slate-400", colors: ["rgba(203, 213, 225, 0.6)", "rgba(148, 163, 184, 0.5)", "rgba(226, 232, 240, 0.4)"] },
-      fog: { bg: "bg-slate-300", colors: ["rgba(203, 213, 225, 0.4)", "rgba(148, 163, 184, 0.3)", "rgba(241, 245, 249, 0.2)"] },
-      rain: { bg: "bg-slate-500", colors: ["rgba(71, 85, 105, 0.5)", "rgba(51, 65, 85, 0.4)", "rgba(30, 41, 59, 0.3)"] },
-      snow: { bg: "bg-sky-100", colors: ["rgba(186, 230, 253, 0.4)", "rgba(241, 245, 249, 0.3)", "rgba(148, 163, 184, 0.2)"] },
-      thunder: { bg: "bg-slate-700", colors: ["rgba(76, 29, 149, 0.5)", "rgba(30, 58, 138, 0.5)", "rgba(17, 24, 39, 0.4)"] }
+      clear:   { bg: "bg-sky-500",   colors: ["rgba(56, 189, 248, 0.6)", "rgba(14, 165, 233, 0.5)", "rgba(186, 230, 253, 0.4)"] },
+      cloudy:  { bg: "bg-slate-400", colors: ["rgba(203, 213, 225, 0.6)", "rgba(148, 163, 184, 0.5)", "rgba(226, 232, 240, 0.4)"] },
+      fog:     { bg: "bg-slate-300", colors: ["rgba(203, 213, 225, 0.4)", "rgba(148, 163, 184, 0.3)", "rgba(241, 245, 249, 0.2)"] },
+      rain:    { bg: "bg-slate-500", colors: ["rgba(71, 85, 105, 0.5)", "rgba(51, 65, 85, 0.4)", "rgba(30, 41, 59, 0.3)"] },
+      snow:    { bg: "bg-sky-100",   colors: ["rgba(186, 230, 253, 0.4)", "rgba(241, 245, 249, 0.3)", "rgba(148, 163, 184, 0.2)"] },
+      thunder: { bg: "bg-slate-700", colors: ["rgba(76, 29, 149, 0.5)", "rgba(30, 58, 138, 0.5)", "rgba(17, 24, 39, 0.4)"] },
     }[category];
   }, [category, isNight]);
 
@@ -100,7 +104,10 @@ export default function LiquidBackground({ code = 0, time }: Props) {
               key={p.id}
               initial={{ y: "-10vh", x: p.left }}
               animate={{ y: "110vh", x: [p.left, `calc(${p.left} + 20px)`, p.left] }}
-              transition={{ y: { duration: p.duration, repeat: Infinity, ease: "linear", delay: p.delay }, x: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
+              transition={{
+                y: { duration: p.duration, repeat: Infinity, ease: "linear", delay: p.delay },
+                x: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+              }}
               className="absolute rounded-full blur-[2px] bg-white/50"
               style={{ width: p.size, height: p.size }}
             />
@@ -116,13 +123,35 @@ export default function LiquidBackground({ code = 0, time }: Props) {
             />
           ))}
           {category === 'thunder' && (
-            <motion.div animate={{ opacity: [0, 0, 0.2, 0, 0.4, 0, 0] }} transition={{ duration: 5, repeat: Infinity, times: [0, 0.8, 0.81, 0.82, 0.83, 0.85, 1] }} className="absolute inset-0 bg-white/10 blur-[100px]" />
+            <motion.div
+              animate={{ opacity: [0, 0, 0.2, 0, 0.4, 0, 0] }}
+              transition={{ duration: 5, repeat: Infinity, times: [0, 0.8, 0.81, 0.82, 0.83, 0.85, 1] }}
+              className="absolute inset-0 bg-white/10 blur-[100px]"
+            />
+          )}
+          {/* Fog: soft drifting white layers */}
+          {category === 'fog' && (
+            <>
+              <motion.div
+                animate={{ x: ["-10%", "10%", "-10%"], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-0 bg-white/20 blur-[60px]"
+              />
+              <motion.div
+                animate={{ x: ["5%", "-5%", "5%"], opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+                className="absolute inset-0 bg-slate-200/20 blur-[80px]"
+              />
+            </>
           )}
         </motion.div>
       </AnimatePresence>
 
       <div className="absolute inset-0 backdrop-blur-[60px]" />
-      <div className="absolute inset-0 opacity-[0.1] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("${noiseSvg}")` }} />
+      <div
+        className="absolute inset-0 opacity-[0.1] pointer-events-none mix-blend-overlay"
+        style={{ backgroundImage: `url("${noiseSvg}")` }}
+      />
     </div>
   );
 }
