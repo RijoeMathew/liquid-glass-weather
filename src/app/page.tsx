@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import VibrantBackground from "../components/VibrantBackground";
+import LiquidBackground from "../components/LiquidBackground";
 import Lottie from "lottie-react";
 import clearDayAnim from "../../public/animations/clear-day.json";
 import cloudyAnim from "../../public/animations/cloudy.json";
@@ -236,7 +236,7 @@ export default function WeatherApp() {
 
     return (
         <main className="min-h-screen p-4 sm:p-8 md:p-12 lg:p-20 flex flex-col items-center relative z-0 overflow-x-hidden">
-            <VibrantBackground code={weather?.current.code} />
+            <LiquidBackground code={weather?.current.code} />
 
             <AnimatePresence>
                 {weather && (
