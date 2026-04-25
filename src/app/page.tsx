@@ -129,179 +129,172 @@ export default function WeatherApp() {
         return <Lottie animationData={animation} style={{ width: size, height: size }} loop={true} />;
     }
 
+    const getTheme = (code: number, isDay: boolean) => {
+        if (!isDay) return { accent: "text-blue-400", tint: "bg-blue-500/10", border: "border-blue-500/20" };
+        if (code === 0) return { accent: "text-amber-500", tint: "bg-amber-500/10", border: "border-amber-500/20" };
+        if (code <= 3) return { accent: "text-slate-500", tint: "bg-slate-500/10", border: "border-slate-500/20" };
+        if (code <= 65) return { accent: "text-cyan-500", tint: "bg-cyan-500/10", border: "border-cyan-500/20" };
+        if (code <= 77) return { accent: "text-blue-300", tint: "bg-blue-300/10", border: "border-blue-300/20" };
+        return { accent: "text-indigo-500", tint: "bg-indigo-500/10", border: "border-indigo-500/20" };
+    };
+
     if (loading) {
         return (
-            <div className="h-screen w-full flex flex-col items-center justify-center bg-[#020617] gap-6">
-                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                <p className="text-white/40 text-xs font-black uppercase tracking-[0.3em]">Initializing Panel</p>
+            <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 gap-4">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing</p>
             </div>
         );
     }
 
     const currentCode = selectedDayIndex === 0 ? weather?.current.code : weather?.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather?.current.is_day === 1 : true;
+    const theme = getTheme(currentCode || 0, isDay);
 
     return (
         <>
         <RealisticBackground code={currentCode} isDay={isDay} />
-        <main className="min-h-screen flex flex-col items-center py-10 px-4 sm:px-10 relative z-10">
+        <main className="min-h-screen flex flex-col items-center py-8 sm:py-12 px-4 sm:px-8 relative z-10">
             
-            {/* System Header */}
-            <div className="w-full max-w-[1300px] flex items-center justify-between mb-10 px-6">
-                <div className="flex items-center gap-4 bg-[#0f172a] px-6 py-3 rounded-2xl shadow-lg border border-white/5">
-                    <Map size={18} className="text-blue-400" />
-                    <h2 className="text-lg font-bold text-white uppercase tracking-wider">
-                        {usingDefault ? "Toronto System" : "Active Location"}
+            <div className="w-full max-w-[1200px] flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-3">
+                    <MapPin className={theme.accent} size={20} />
+                    <h2 className="text-lg font-bold tracking-tight text-slate-800">
+                        {usingDefault ? "Toronto, ON" : "Current Location"}
                     </h2>
                 </div>
-                <button onClick={() => fetchWeather()} className="w-12 h-12 flex items-center justify-center bg-[#0f172a] hover:bg-[#1e293b] rounded-2xl shadow-lg border border-white/5 transition-all active:scale-95">
-                    <RefreshCw size={20} className="text-white/60" />
+                <button onClick={() => fetchWeather()} className="p-2 hover:bg-white/40 rounded-full transition-all active:scale-90">
+                    <RefreshCw size={20} className="text-slate-400" />
                 </button>
             </div>
 
             <div className="bento-container">
-                {/* HERO PANEL */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="tactile-tile tile-hero justify-between group">
+                {/* HERO TILE */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bento-tile tile-hero justify-between group">
                     <div className="flex justify-between items-start">
-                        <div className="space-y-4">
-                            <p className="text-label-caps">Meteorological Overview</p>
-                            <h1 className="text-huge">{Math.round(weather!.current.temp)}°</h1>
-                            <div className="flex items-center gap-3">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                <p className="text-xl font-bold text-white/80 uppercase tracking-widest">{weather!.current.condition}</p>
-                            </div>
+                        <div className="space-y-2">
+                            <p className="text-label-caps">Current Conditions</p>
+                            <h1 className={`text-huge ${theme.accent}`}>{Math.round(weather!.current.temp)}°</h1>
+                            <p className="text-xl font-bold text-slate-700/80 uppercase tracking-widest">{weather!.current.condition}</p>
                         </div>
-                        <div className="tactile-well w-40 h-40 sm:w-56 sm:h-56">
+                        <div className="hidden sm:block mt-[-20px] mr-[-20px]">
                             {getWeatherIcon(weather!.current.code, 180)}
+                        </div>
+                        <div className="sm:hidden">
+                            {getWeatherIcon(weather!.current.code, 80)}
                         </div>
                     </div>
                     
                     <div className="flex gap-4 mt-8">
-                        <div className="bg-[#020617] px-6 py-3 rounded-2xl shadow-inner border border-white/5">
-                            <span className="text-label-caps block mb-1">Low Range</span>
-                            <span className="text-lg font-black">{Math.round(weather!.daily[0].temp_min)}°</span>
+                        <div className={`px-4 py-2 rounded-2xl ${theme.tint} border ${theme.border}`}>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Low</span>
+                            <span className="text-base font-black text-slate-800">{Math.round(weather!.daily[0].temp_min)}°</span>
                         </div>
-                        <div className="bg-[#020617] px-6 py-3 rounded-2xl shadow-inner border border-white/5">
-                            <span className="text-label-caps block mb-1">High Range</span>
-                            <span className="text-lg font-black">{Math.round(weather!.daily[0].temp_max)}°</span>
+                        <div className={`px-4 py-2 rounded-2xl ${theme.tint} border ${theme.border}`}>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">High</span>
+                            <span className="text-base font-black text-slate-800">{Math.round(weather!.daily[0].temp_max)}°</span>
                         </div>
                     </div>
                 </motion.div>
 
-                {/* 7-DAY VERTICAL PANEL */}
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="tactile-tile tile-tall space-y-8">
-                    <div className="flex items-center gap-3">
-                        <Calendar size={18} className="text-blue-500" />
+                {/* 7-DAY FORECAST */}
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bento-tile tile-tall space-y-6">
+                    <div className="flex items-center gap-2">
+                        <Calendar size={16} className={theme.accent} />
                         <p className="text-label-caps">Weekly Outlook</p>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {weather!.daily.map((day, i) => (
-                            <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all ${selectedDayIndex === i ? 'bg-[#020617] shadow-inner border border-white/10' : 'hover:bg-white/5 border border-transparent'}`}>
-                                <span className="text-xs font-black uppercase w-12 text-white/60">{i === 0 ? "NOW" : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                            <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all ${selectedDayIndex === i ? theme.tint + ' ' + theme.border : 'hover:bg-white/40 border border-transparent'}`}>
+                                <span className="text-xs font-bold w-10 text-slate-500">{i === 0 ? "NOW" : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
                                 {getWeatherIcon(day.code, 26)}
-                                <div className="flex gap-3 font-black text-sm w-16 justify-end">
-                                    <span className="text-white">{Math.round(day.temp_max)}°</span>
-                                    <span className="text-white/20">{Math.round(day.temp_min)}°</span>
+                                <div className="flex gap-2 font-bold text-xs w-12 justify-end">
+                                    <span className="text-slate-800">{Math.round(day.temp_max)}°</span>
+                                    <span className="text-slate-300">{Math.round(day.temp_min)}°</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </motion.div>
 
-                {/* HOURLY HORIZONTAL PANEL */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="tactile-tile tile-wide">
-                    <div className="flex items-center gap-3 mb-8">
-                        <Navigation size={18} className="rotate-45 text-blue-500" />
-                        <p className="text-label-caps">Chronological Flow</p>
+                {/* HOURLY FORECAST */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bento-tile tile-wide">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Navigation size={16} className={`rotate-45 ${theme.accent}`} />
+                        <p className="text-label-caps">Timeline</p>
                     </div>
-                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                         {weather!.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
-                            <div key={i} className="flex flex-col items-center min-w-[75px] space-y-4 p-4 rounded-2xl bg-[#020617] shadow-inner border border-white/5">
-                                <span className="text-[10px] font-black text-white/30 uppercase tracking-tighter">{new Date(h.time).getHours()}:00</span>
-                                {getWeatherIcon(h.code, 32)}
-                                <span className="text-lg font-black">{Math.round(h.temp)}°</span>
+                            <div key={i} className={`flex flex-col items-center min-w-[65px] space-y-3 p-3 rounded-2xl ${theme.tint}`}>
+                                <span className="text-[9px] font-bold text-slate-400">{new Date(h.time).getHours()}:00</span>
+                                {getWeatherIcon(h.code, 28)}
+                                <span className="text-base font-black text-slate-800">{Math.round(h.temp)}°</span>
                             </div>
                         ))}
                     </div>
                 </motion.div>
 
-                {/* SMALL DATA MODULES */}
-                <div className="tactile-tile tile-small justify-between">
-                    <div className="flex items-center gap-3">
-                        <Wind size={16} className="text-blue-500" />
-                        <p className="text-label-caps">Wind Vel</p>
+                {/* SMALL DATA TILES */}
+                <div className="bento-tile tile-small justify-between group">
+                    <div className="flex items-center gap-2">
+                        <Wind size={16} className="text-blue-400" />
+                        <p className="text-label-caps">Wind</p>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-white">{weather!.current.windspeed}</p>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Kilo / Hour</p>
-                    </div>
-                    <div className="w-full h-1.5 bg-[#020617] rounded-full shadow-inner overflow-hidden mt-4">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(weather!.current.windspeed * 2.5, 100)}%` }} className="h-full bg-blue-500" />
+                    <p className="text-4xl font-black text-slate-800">{weather!.current.windspeed} <span className="text-xs font-medium text-slate-400">km/h</span></p>
+                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(weather!.current.windspeed * 2, 100)}%` }} className="h-full bg-blue-400" />
                     </div>
                 </div>
 
-                <div className="tactile-tile tile-small justify-between">
-                    <div className="flex items-center gap-3">
-                        <Droplets size={16} className="text-blue-500" />
-                        <p className="text-label-caps">Moisture</p>
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Droplets size={16} className="text-cyan-400" />
+                        <p className="text-label-caps">Humidity</p>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-white">{weather!.current.humidity}%</p>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Relative Hum</p>
-                    </div>
-                    <div className="w-full h-1.5 bg-[#020617] rounded-full shadow-inner overflow-hidden mt-4">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${weather!.current.humidity}%` }} className="h-full bg-blue-400" />
+                    <p className="text-4xl font-black text-slate-800">{weather!.current.humidity}%</p>
+                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${weather!.current.humidity}%` }} className="h-full bg-cyan-400" />
                     </div>
                 </div>
 
-                <div className="tactile-tile tile-small justify-between">
-                    <div className="flex items-center gap-3">
-                        <Eye size={16} className="text-blue-500" />
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Eye size={16} className="text-indigo-400" />
                         <p className="text-label-caps">Optical</p>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-white">{Math.round(weather!.current.visibility)}</p>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Range / KM</p>
-                    </div>
-                    <div className="bg-[#020617] py-2 px-3 rounded-lg shadow-inner text-[9px] font-black text-blue-400 uppercase tracking-widest">Nominal</div>
+                    <p className="text-4xl font-black text-slate-800">{Math.round(weather!.current.visibility)} <span className="text-xs font-medium text-slate-400">km</span></p>
+                    <p className="text-[9px] font-bold text-indigo-400 uppercase mt-2 tracking-widest">Nominal</p>
                 </div>
 
-                <div className="tactile-tile tile-small justify-between">
-                    <div className="flex items-center gap-3">
-                        <Gauge size={16} className="text-blue-500" />
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Gauge size={16} className="text-slate-400" />
                         <p className="text-label-caps">Pressure</p>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-white">{Math.round(weather!.current.pressure)}</p>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Hectopascal</p>
-                    </div>
-                    <div className="bg-[#020617] py-2 px-3 rounded-lg shadow-inner text-[9px] font-black text-blue-400 uppercase tracking-widest">Stable</div>
+                    <p className="text-4xl font-black text-slate-800">{Math.round(weather!.current.pressure)}</p>
+                    <p className="text-[9px] font-bold text-slate-300 uppercase mt-2 tracking-widest">Steady</p>
                 </div>
 
-                <div className="tactile-tile tile-small justify-between">
-                    <div className="flex items-center gap-3">
-                        <Thermometer size={16} className="text-blue-500" />
-                        <p className="text-label-caps">Perception</p>
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Thermometer size={16} className="text-rose-400" />
+                        <p className="text-label-caps">Feel</p>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-white">{Math.round(weather!.current.temp)}°</p>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Sensory Temp</p>
-                    </div>
-                    <div className="w-full h-1.5 bg-[#020617] rounded-full shadow-inner overflow-hidden mt-4">
-                        <motion.div initial={{ width: 0 }} animate={{ width: "50%" }} className="h-full bg-blue-600" />
+                    <p className="text-4xl font-black text-slate-800">{Math.round(weather!.current.temp)}°</p>
+                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full bg-rose-400 w-1/2" />
                     </div>
                 </div>
 
-                <div className="tactile-tile tile-small justify-between">
-                    <div className="flex items-center gap-3">
-                        <Sun size={16} className="text-blue-500" />
-                        <p className="text-label-caps">Radiation</p>
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Sun size={16} className="text-amber-400" />
+                        <p className="text-label-caps">UV Index</p>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-white">4.2</p>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">UV Index</p>
+                    <p className="text-4xl font-black text-slate-800">4 <span className="text-xs font-medium text-slate-400">Mod</span></p>
+                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full bg-amber-400 w-1/3" />
                     </div>
-                    <div className="bg-[#020617] py-2 px-3 rounded-lg shadow-inner text-[9px] font-black text-blue-400 uppercase tracking-widest">Moderate</div>
                 </div>
             </div>
         </main>
