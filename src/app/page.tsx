@@ -102,85 +102,83 @@ export default function WeatherApp() {
         <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
             
-            <div className="max-w-5xl mx-auto flex flex-col gap-16">
-                {/* Header */}
-                <header className={`flex justify-between items-center font-black uppercase text-[10px] tracking-[0.3em] ${shadowClass}`}>
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-16">
+                {/* Header (Full width) */}
+                <header className={`col-span-full flex justify-between items-center font-black uppercase text-[10px] tracking-[0.3em] ${shadowClass}`}>
                     <div className="flex items-center gap-2"><MapPin size={14} /> Toronto System</div>
                     <button onClick={fetchWeather} className="hover:scale-110 transition-transform"><RefreshCw size={18} /></button>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24 items-center">
-                    {/* Hero Display */}
-                    <motion.div 
-                        key={selectedDayIndex} 
-                        initial={{ opacity: 0, y: 20 }} 
-                        animate={{ opacity: 1, y: 0 }} 
-                        className={`flex flex-col items-center md:items-start text-center md:text-left ${shadowClass}`}
-                    >
-                        <div className={`mb-6 transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(currentCode, 180)}</div>
-                        <h1 className="text-[10rem] sm:text-[12rem] font-black leading-[0.8] tracking-tighter">
-                            {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
-                        </h1>
-                        <p className="text-3xl sm:text-4xl font-black uppercase tracking-[0.1em] mt-8 opacity-90">{weather.daily[selectedDayIndex].condition}</p>
-                        <div className={`mt-6 flex gap-6 text-sm font-bold uppercase tracking-widest ${subTextColor}`}>
-                            <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}°</span>
-                            <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}°</span>
-                        </div>
-                    </motion.div>
+                {/* Hero Display (Top Left Desktop, Centered Mobile) */}
+                <motion.div 
+                    key={selectedDayIndex} 
+                    initial={{ opacity: 0, y: 20 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    className={`md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left ${shadowClass}`}
+                >
+                    <div className={`mb-6 transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(currentCode, 180)}</div>
+                    <h1 className="text-[10rem] sm:text-[12rem] font-black leading-[0.8] tracking-tighter">
+                        {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
+                    </h1>
+                    <p className="text-3xl sm:text-4xl font-black uppercase tracking-[0.1em] mt-8 opacity-90">{weather.daily[selectedDayIndex].condition}</p>
+                    <div className={`mt-6 flex gap-6 text-sm font-bold uppercase tracking-widest ${subTextColor}`}>
+                        <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}°</span>
+                        <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}°</span>
+                    </div>
+                </motion.div>
 
-                    {/* Dashboard Detail Panel */}
-                    <div className="flex flex-col gap-12 sm:gap-16">
-                        {/* Essential Metrics */}
-                        <div className={`grid grid-cols-3 gap-8 ${shadowClass}`}>
-                            <div className="space-y-2">
-                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>Wind</span>
-                                <p className="text-2xl font-black flex items-baseline gap-1">{Math.round(weather.current.windspeed)}<span className="text-xs opacity-40 uppercase">km/h</span></p>
-                            </div>
-                            <div className="space-y-2">
-                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>UV Index</span>
-                                <p className="text-2xl font-black flex items-baseline gap-1">4.2<span className="text-xs opacity-40 uppercase">mod</span></p>
-                            </div>
-                            <div className="space-y-2">
-                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>Humidity</span>
-                                <p className="text-2xl font-black flex items-baseline gap-1">{weather.current.humidity}<span className="text-xs opacity-40 uppercase">%</span></p>
-                            </div>
+                {/* Dashboard Detail Panel (Right Side Desktop, Bottom Mobile) */}
+                <div className="md:col-span-7 flex flex-col gap-12 sm:gap-16">
+                    {/* Essential Metrics */}
+                    <div className={`grid grid-cols-3 gap-8 ${shadowClass}`}>
+                        <div className="space-y-2">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>Wind</span>
+                            <p className="text-2xl font-black flex items-baseline gap-1">{Math.round(weather.current.windspeed)}<span className="text-xs opacity-40 uppercase">km/h</span></p>
                         </div>
+                        <div className="space-y-2">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>UV Index</span>
+                            <p className="text-2xl font-black flex items-baseline gap-1">4.2<span className="text-xs opacity-40 uppercase">mod</span></p>
+                        </div>
+                        <div className="space-y-2">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>Humidity</span>
+                            <p className="text-2xl font-black flex items-baseline gap-1">{weather.current.humidity}<span className="text-xs opacity-40 uppercase">%</span></p>
+                        </div>
+                    </div>
 
-                        {/* Chronological Flow (Hourly) */}
-                        <div className={`flex flex-col gap-6 ${shadowClass}`}>
-                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>Timeline / 24H</span>
-                            <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide border-b border-current/10">
-                                {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
-                                    <div key={i} className="flex flex-col items-center gap-3 shrink-0">
-                                        <span className={`text-[10px] font-bold ${subTextColor}`}>{formatTime(h.time)}</span>
-                                        <div className={`transition-all duration-1000 ${iconFilter}`}>
-                                            {getWeatherIcon(h.code, 36)}
-                                        </div>
-                                        <span className="font-black text-lg">{Math.round(h.temp)}°</span>
+                    {/* Chronological Flow (Hourly) */}
+                    <div className={`flex flex-col gap-6 ${shadowClass}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>Timeline / 24H</span>
+                        <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide border-b border-current/10">
+                            {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
+                                <div key={i} className="flex flex-col items-center gap-3 shrink-0">
+                                    <span className={`text-[10px] font-bold ${subTextColor}`}>{formatTime(h.time)}</span>
+                                    <div className={`transition-all duration-1000 ${iconFilter}`}>
+                                        {getWeatherIcon(h.code, 36)}
                                     </div>
-                                ))}
-                            </div>
+                                    <span className="font-black text-lg">{Math.round(h.temp)}°</span>
+                                </div>
+                            ))}
                         </div>
+                    </div>
 
-                        {/* Outlook (Daily) */}
-                        <div className={`flex flex-col gap-6 ${shadowClass}`}>
-                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>7-Day Outlook</span>
-                            <div className="grid gap-3">
-                                {weather.daily.map((d, i) => (
-                                    <div 
-                                        key={i} 
-                                        onClick={() => setSelectedDayIndex(i)} 
-                                        className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? 'bg-black/10 font-black' : 'hover:opacity-100 opacity-40'}`}
-                                    >
-                                        <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                        <div className={`flex-1 flex justify-center transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(d.code, 28)}</div>
-                                        <div className="font-black text-right w-20 flex gap-3 justify-end text-sm">
-                                            <span>{Math.round(d.temp_max)}°</span>
-                                            <span className="opacity-30">{Math.round(d.temp_min)}°</span>
-                                        </div>
+                    {/* Outlook (Daily) */}
+                    <div className={`flex flex-col gap-6 ${shadowClass}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${subTextColor}`}>7-Day Outlook</span>
+                        <div className="grid gap-3">
+                            {weather.daily.map((d, i) => (
+                                <div 
+                                    key={i} 
+                                    onClick={() => setSelectedDayIndex(i)} 
+                                    className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? 'bg-black/10 font-black' : 'hover:opacity-100 opacity-40'}`}
+                                >
+                                    <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                    <div className={`flex-1 flex justify-center transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(d.code, 28)}</div>
+                                    <div className="font-black text-right w-20 flex gap-3 justify-end text-sm">
+                                        <span>{Math.round(d.temp_max)}°</span>
+                                        <span className="opacity-30">{Math.round(d.temp_min)}°</span>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
