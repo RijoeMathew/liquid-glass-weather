@@ -63,7 +63,7 @@ export default function WeatherApp() {
     useEffect(() => { fetchWeather(); }, []);
 
     function getWeatherIcon(code: number, size: number = 64, isDay: boolean = true) {
-        let anim = isDay ? clearDayAnim : clearDayAnim; // Placeholder for night animations if available
+        let anim: any = isDay ? clearDayAnim : clearDayAnim; // Placeholder for night animations if available
         if (code === 0) anim = clearDayAnim;
         else if (code >= 1 && code <= 3) anim = partlyCloudyAnim;
         else if (code <= 48) anim = cloudyAnim;
