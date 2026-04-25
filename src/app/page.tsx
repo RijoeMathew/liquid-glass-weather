@@ -93,16 +93,17 @@ export default function WeatherApp() {
     // Forced High-Contrast Logic
     const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3);
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
-    const subTextColor = isLightBackground ? 'text-slate-900/60' : 'text-white/60';
-    const shadowClass = isLightBackground ? 'drop-shadow-sm' : 'drop-shadow-2xl';
+    const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
+    const iconFilter = isLightBackground ? 'invert-[0.8] brightness-[0.2]' : ''; // Make white icons dark
+    const shadowClass = isLightBackground ? 'drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]' : 'drop-shadow-2xl';
 
     return (
-        <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor}`}>
+        <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor} selection:bg-blue-500 selection:text-white`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
             
             <div className="max-w-5xl mx-auto flex flex-col gap-16">
                 {/* Header */}
-                <header className={`flex justify-between items-center opacity-60 font-black uppercase text-[10px] tracking-[0.3em] ${shadowClass}`}>
+                <header className={`flex justify-between items-center font-black uppercase text-[10px] tracking-[0.3em] ${shadowClass}`}>
                     <div className="flex items-center gap-2"><MapPin size={14} /> Toronto System</div>
                     <button onClick={fetchWeather} className="hover:scale-110 transition-transform"><RefreshCw size={18} /></button>
                 </header>
@@ -115,7 +116,7 @@ export default function WeatherApp() {
                         animate={{ opacity: 1, y: 0 }} 
                         className={`flex flex-col items-center md:items-start text-center md:text-left ${shadowClass}`}
                     >
-                        <div className="mb-6">{getWeatherIcon(currentCode, 180)}</div>
+                        <div className={`mb-6 transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(currentCode, 180)}</div>
                         <h1 className="text-[10rem] sm:text-[12rem] font-black leading-[0.8] tracking-tighter">
                             {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
                         </h1>
@@ -150,8 +151,10 @@ export default function WeatherApp() {
                             <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide border-b border-current/10">
                                 {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                                     <div key={i} className="flex flex-col items-center gap-3 shrink-0">
-                                        <span className="text-[10px] font-bold opacity-40">{formatTime(h.time)}</span>
-                                        {getWeatherIcon(h.code, 36)}
+                                        <span className={`text-[10px] font-bold ${subTextColor}`}>{formatTime(h.time)}</span>
+                                        <div className={`transition-all duration-1000 ${iconFilter}`}>
+                                            {getWeatherIcon(h.code, 36)}
+                                        </div>
                                         <span className="font-black text-lg">{Math.round(h.temp)}°</span>
                                     </div>
                                 ))}
@@ -169,7 +172,7 @@ export default function WeatherApp() {
                                         className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? (isLightBackground ? 'bg-black/10' : 'bg-white/10') : 'hover:opacity-100 opacity-40'}`}
                                     >
                                         <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                        <div className="flex-1 flex justify-center">{getWeatherIcon(d.code, 28)}</div>
+                                        <div className={`flex-1 flex justify-center transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(d.code, 28)}</div>
                                         <div className="font-black text-right w-20 flex gap-3 justify-end text-sm">
                                             <span>{Math.round(d.temp_max)}°</span>
                                             <span className="opacity-30">{Math.round(d.temp_min)}°</span>
