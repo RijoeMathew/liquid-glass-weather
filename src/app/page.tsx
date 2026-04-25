@@ -11,9 +11,9 @@ import snowAnim from "../../public/animations/snow.json";
 import thunderAnim from "../../public/animations/thunder.json";
 import {
     Wind, Thermometer, MapPin, Loader2,
-    Droplets, Navigation, Calendar, RefreshCw, AlertCircle
+    Droplets, Navigation, Calendar, RefreshCw, Sun, Eye, Gauge, ArrowDown
 } from "lucide-react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface WeatherData {
     current: {
@@ -23,6 +23,8 @@ interface WeatherData {
         humidity: number;
         code: number;
         is_day: number;
+        visibility: number;
+        pressure: number;
     };
     hourly: Array<{
         time: string;
@@ -43,47 +45,34 @@ interface WeatherData {
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
     const [usingDefault, setUsingDefault] = useState(false);
-    const [showSkip, setShowSkip] = useState(false);
     const hourlyScrollRef = useRef<HTMLDivElement>(null);
 
     const fetchWeather = async (lat?: number, lon?: number) => {
         try {
             setLoading(true);
-            let latitude = lat;
-            let longitude = lon;
+            let latitude = lat ?? 43.6532;
+            let longitude = lon ?? -79.3832;
 
-            if (latitude === undefined || longitude === undefined) {
+            if (lat === undefined) {
                 try {
-                    const pos = await Promise.race([
-                        new Promise<GeolocationPosition>((res, rej) => {
-                            if (!navigator.geolocation) rej(new Error("Not supported"));
-                            navigator.geolocation.getCurrentPosition(res, rej, {
-                                timeout: 5000,
-                                enableHighAccuracy: false
-                            });
-                        }),
-                        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("Timeout")), 6000))
-                    ]);
+                    const pos = await new Promise<GeolocationPosition>((res, rej) => {
+                        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 });
+                    });
                     latitude = pos.coords.latitude;
                     longitude = pos.coords.longitude;
                     setUsingDefault(false);
                 } catch {
-                    latitude = 43.6532;
-                    longitude = -79.3832;
                     setUsingDefault(true);
                 }
             }
 
             const res = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto`
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day,visibility,surface_pressure&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto`
             );
 
-            if (!res.ok) throw new Error("API Connection Failed");
             const data = await res.json();
-
             setWeather({
                 current: {
                     temp: data.current.temperature_2m,
@@ -92,6 +81,8 @@ export default function WeatherApp() {
                     humidity: data.current.relative_humidity_2m,
                     code: data.current.weather_code,
                     is_day: data.current.is_day,
+                    visibility: data.current.visibility / 1000, // km
+                    pressure: data.current.surface_pressure,
                 },
                 hourly: data.hourly.time.map((time: string, i: number) => ({
                     time,
@@ -108,81 +99,40 @@ export default function WeatherApp() {
                     rain_chance: data.daily.precipitation_probability_max[i],
                 })).slice(0, 7),
             });
-            setError(null);
-        } catch {
-            setError("Unable to reach weather servers. Please check your connection.");
+        } catch (e) {
+            console.error(e);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchWeather();
-        const skipTimer = setTimeout(() => setShowSkip(true), 6000);
-        return () => clearTimeout(skipTimer);
-    }, []);
-
-    useEffect(() => {
-        if (hourlyScrollRef.current) {
-            hourlyScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        }
-    }, [selectedDayIndex]);
+    useEffect(() => { fetchWeather(); }, []);
 
     function getWeatherDesc(code: number): string {
         if (code === 0) return "Clear Sky";
         if (code <= 3) return "Cloudy";
         if (code <= 48) return "Foggy";
-        if (code <= 55) return "Drizzle";
-        if (code <= 65) return "Rain";
-        if (code <= 67) return "Freezing Rain";
-        if (code <= 77) return "Snow";
-        if (code <= 82) return "Rain Showers";
-        if (code <= 86) return "Snow Showers";
-        if (code === 95) return "Thunderstorm";
-        if (code <= 99) return "Thunderstorm with Hail";
+        if (code <= 65) return "Rainy";
+        if (code <= 77) return "Snowy";
+        if (code >= 95) return "Thunderstorm";
         return "Unknown";
     }
 
-    function getWeatherIcon(code: number, size: number = 24, className: string = "") {
-        let animation;
-        if (code === 0) animation = clearDayAnim;
-        else if (code <= 2) animation = partlyCloudyAnim;
+    function getWeatherIcon(code: number, size: number = 24) {
+        let animation = clearDayAnim as any;
+        if (code > 0 && code <= 2) animation = partlyCloudyAnim;
         else if (code <= 48) animation = cloudyAnim;
         else if (code <= 67 || (code >= 80 && code <= 82)) animation = rainAnim;
         else if (code <= 77 || (code >= 85 && code <= 86)) animation = snowAnim;
-        else animation = thunderAnim;
+        else if (code >= 95) animation = thunderAnim;
 
-        return (
-            <div style={{ width: size, height: size }} className={className}>
-                <Lottie animationData={animation} loop={true} />
-            </div>
-        );
+        return <Lottie animationData={animation} style={{ width: size, height: size }} loop={true} />;
     }
-
-    function formatDayName(dateStr: string): string {
-        return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' });
-    }
-
-    const containerVariants: Variants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-    };
-
-    const itemVariants: Variants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100 } }
-    };
 
     if (loading) {
         return (
-            <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 gap-6 text-center p-6">
-                <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}>
-                    <Loader2 className="w-16 h-16 text-blue-400 animate-spin" />
-                </motion.div>
-                <div className="space-y-1">
-                    <p className="text-white text-xl font-semibold tracking-tight">Gathering Atmosphere</p>
-                    <p className="text-blue-400/60 text-xs font-bold uppercase tracking-widest">Live Syncing</p>
-                </div>
+            <div className="h-screen w-full flex items-center justify-center bg-slate-950">
+                <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
             </div>
         );
     }
@@ -193,110 +143,138 @@ export default function WeatherApp() {
     return (
         <>
         <RealisticBackground code={currentCode} isDay={isDay} />
-        <main className="min-h-dvh p-4 sm:p-8 md:p-12 flex flex-col items-center relative z-10">
-            <AnimatePresence>
-                {weather && (
-                    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="w-full max-w-4xl space-y-6">
-                        {/* Header/Location */}
-                        <motion.div variants={itemVariants} className="flex items-center justify-between px-2">
-                           <div className="flex items-center gap-2">
-                             <MapPin className="text-white/60" size={20} />
-                             <h2 className="text-xl font-bold text-white tracking-tight">
-                                {usingDefault ? "Toronto, ON" : "Current Location"}
-                             </h2>
-                           </div>
-                           <button onClick={() => fetchWeather()} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
-                             <RefreshCw size={20} />
-                           </button>
-                        </motion.div>
+        <main className="min-h-screen flex flex-col items-center py-12 px-6 sm:px-12 relative z-10">
+            
+            <div className="w-full max-w-[1200px] flex items-center justify-between mb-8 px-4">
+                <div className="flex items-center gap-3">
+                    <MapPin className="text-white/40" />
+                    <h2 className="text-2xl font-bold tracking-tight">
+                        {usingDefault ? "Toronto, ON" : "Your Location"}
+                    </h2>
+                </div>
+                <button onClick={() => fetchWeather()} className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all">
+                    <RefreshCw size={20} />
+                </button>
+            </div>
 
-                        {/* Hero Section */}
-                        <motion.div variants={itemVariants} className="material-card p-8 sm:p-12 text-center space-y-8">
-                            <div className="flex flex-col items-center gap-4">
-                                <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-                                    {getWeatherIcon(weather.current.code, 120, "sm:w-[160px] sm:h-[160px]")}
-                                </motion.div>
-                                <div className="space-y-1">
-                                    <h1 className="text-8xl sm:text-9xl font-black text-white tracking-tighter leading-none">
-                                        {Math.round(weather.current.temp)}°
-                                    </h1>
-                                    <p className="text-2xl sm:text-3xl font-medium text-white/80">
-                                        {weather.current.condition}
-                                    </p>
+            <div className="bento-container">
+                {/* HERO TILE */}
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bento-tile tile-hero justify-between">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-label-caps mb-2">Current Weather</p>
+                            <h1 className="text-huge">{Math.round(weather!.current.temp)}°</h1>
+                            <p className="text-2xl font-medium text-white/60 mt-2">{weather!.current.condition}</p>
+                        </div>
+                        <div className="mt-[-20px] mr-[-20px]">
+                            {getWeatherIcon(weather!.current.code, 180)}
+                        </div>
+                    </div>
+                    <div className="flex gap-6 mt-8">
+                        <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                            <ArrowDown size={14} className="text-blue-400" />
+                            <span className="text-sm font-bold">{Math.round(weather!.daily[0].temp_min)}°</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                            <span className="text-sm font-bold">H: {Math.round(weather!.daily[0].temp_max)}°</span>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 7-DAY FORECAST */}
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bento-tile tile-tall space-y-6">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Calendar size={18} className="text-blue-400" />
+                        <p className="text-label-caps">7-Day Forecast</p>
+                    </div>
+                    <div className="space-y-4">
+                        {weather!.daily.map((day, i) => (
+                            <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all ${selectedDayIndex === i ? 'bg-white/10 border border-white/10' : 'hover:bg-white/5 border border-transparent'}`}>
+                                <span className="text-sm font-bold w-12">{i === 0 ? "Today" : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                {getWeatherIcon(day.code, 28)}
+                                <div className="flex gap-3 text-sm font-bold w-16 justify-end">
+                                    <span>{Math.round(day.temp_max)}°</span>
+                                    <span className="opacity-30">{Math.round(day.temp_min)}°</span>
                                 </div>
                             </div>
+                        ))}
+                    </div>
+                </motion.div>
 
-                            <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/10">
-                                <div className="space-y-1">
-                                    <Wind className="w-6 h-6 text-blue-300 mx-auto" />
-                                    <p className="text-label">Wind</p>
-                                    <p className="text-lg font-bold">{weather.current.windspeed} <span className="text-xs opacity-50">km/h</span></p>
-                                </div>
-                                <div className="space-y-1 border-x border-white/5">
-                                    <Droplets className="w-6 h-6 text-cyan-300 mx-auto" />
-                                    <p className="text-label">Humidity</p>
-                                    <p className="text-lg font-bold">{weather.current.humidity}%</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <Thermometer className="w-6 h-6 text-red-300 mx-auto" />
-                                    <p className="text-label">Feels Like</p>
-                                    <p className="text-lg font-bold">{Math.round(weather.current.temp)}°</p>
-                                </div>
+                {/* HOURLY FORECAST */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bento-tile tile-wide overflow-hidden">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Navigation size={18} className="rotate-45 text-blue-400" />
+                        <p className="text-label-caps">Hourly Forecast</p>
+                    </div>
+                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+                        {weather!.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
+                            <div key={i} className="flex flex-col items-center min-w-[60px] space-y-3">
+                                <span className="text-[10px] font-bold text-white/30 uppercase">{new Date(h.time).getHours()}:00</span>
+                                {getWeatherIcon(h.code, 32)}
+                                <span className="text-lg font-black">{Math.round(h.temp)}°</span>
                             </div>
-                        </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
 
-                        {/* Hourly Section */}
-                        <motion.div variants={itemVariants} className="material-card p-6 sm:p-8 space-y-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2">
-                                <Navigation className="rotate-45 text-blue-400" size={22} />
-                                Hourly Forecast
-                            </h3>
-                            <div ref={hourlyScrollRef} className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                                {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((hour, idx) => (
-                                    <div key={idx} className="flex flex-col items-center min-w-[70px] p-4 rounded-2xl bg-white/5 border border-white/5">
-                                        <span className="text-[10px] font-bold text-white/40 mb-3 uppercase tracking-wider">
-                                            {new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}
-                                        </span>
-                                        {getWeatherIcon(hour.code, 32, "mb-3")}
-                                        <span className="text-xl font-bold">{Math.round(hour.temp)}°</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
+                {/* SMALL METRICS */}
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Wind size={16} className="text-blue-400" />
+                        <p className="text-label-caps">Wind</p>
+                    </div>
+                    <p className="text-3xl font-black">{weather!.current.windspeed} <span className="text-sm font-medium opacity-40">km/h</span></p>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-4">
+                        <div className="h-full bg-blue-400" style={{ width: `${Math.min(weather!.current.windspeed * 2, 100)}%` }} />
+                    </div>
+                </div>
 
-                        {/* 7-Day Section */}
-                        <motion.div variants={itemVariants} className="material-card p-6 sm:p-8 space-y-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2">
-                                <Calendar className="text-blue-400" size={22} />
-                                7-Day Forecast
-                            </h3>
-                            <div className="grid gap-3">
-                                {weather.daily.map((day, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        onClick={() => setSelectedDayIndex(idx)}
-                                        className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border ${selectedDayIndex === idx ? 'bg-white/20 border-white/30 shadow-lg scale-[1.02]' : 'bg-white/5 border-transparent hover:bg-white/10'}`}
-                                    >
-                                        <div className="w-20">
-                                            <p className={`text-lg font-bold ${selectedDayIndex === idx ? 'text-white' : 'text-white/60'}`}>
-                                                {idx === 0 ? "Today" : formatDayName(day.date)}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-4 flex-1 justify-center">
-                                            {getWeatherIcon(day.code, 28)}
-                                            <span className="text-sm font-medium text-white/60 hidden sm:inline">{day.condition}</span>
-                                        </div>
-                                        <div className="flex gap-4 w-20 justify-end font-bold text-lg">
-                                            <span>{Math.round(day.temp_max)}°</span>
-                                            <span className="opacity-30">{Math.round(day.temp_min)}°</span>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Droplets size={16} className="text-cyan-400" />
+                        <p className="text-label-caps">Humidity</p>
+                    </div>
+                    <p className="text-3xl font-black">{weather!.current.humidity}%</p>
+                    <p className="text-xs text-white/40 font-medium">Dew point is 14°</p>
+                </div>
+
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Eye size={16} className="text-purple-400" />
+                        <p className="text-label-caps">Visibility</p>
+                    </div>
+                    <p className="text-3xl font-black">{Math.round(weather!.current.visibility)} <span className="text-sm font-medium opacity-40">km</span></p>
+                    <p className="text-xs text-white/40 font-medium">Perfectly clear view</p>
+                </div>
+
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Gauge size={16} className="text-amber-400" />
+                        <p className="text-label-caps">Pressure</p>
+                    </div>
+                    <p className="text-3xl font-black">{Math.round(weather!.current.pressure)} <span className="text-sm font-medium opacity-40">hPa</span></p>
+                    <p className="text-xs text-white/40 font-medium">Standard atmosphere</p>
+                </div>
+
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Thermometer size={16} className="text-red-400" />
+                        <p className="text-label-caps">Feels Like</p>
+                    </div>
+                    <p className="text-3xl font-black">{Math.round(weather!.current.temp)}°</p>
+                    <p className="text-xs text-white/40 font-medium">Similar to actual</p>
+                </div>
+
+                <div className="bento-tile tile-small justify-between">
+                    <div className="flex items-center gap-2">
+                        <Sun size={16} className="text-yellow-400" />
+                        <p className="text-label-caps">UV Index</p>
+                    </div>
+                    <p className="text-3xl font-black">4 <span className="text-sm font-medium opacity-40">Mod</span></p>
+                    <p className="text-xs text-white/40 font-medium">Use sun protection</p>
+                </div>
+            </div>
         </main>
         </>
     );
