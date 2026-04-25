@@ -67,6 +67,10 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
 
+    function formatTime(timeStr: string): string {
+        return new Date(timeStr).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+    }
+
     const isBackgroundLight = (code: number, isDay: boolean) => {
         if (!isDay) return false;
         return code === 0 || code <= 3;
