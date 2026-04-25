@@ -90,14 +90,15 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
     
-    // Contrast based on the selected day
+    // Forced High-Contrast Logic
     const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3);
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
     const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
-    const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1]' : ''; 
+    const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1]' : 'brightness-100'; 
     const shadowClass = isLightBackground 
         ? 'drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]' 
         : 'drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]';
+
 
     return (
         <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
