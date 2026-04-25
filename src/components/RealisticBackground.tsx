@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from "framer-motion";
 import { useMemo } from "react";
 
 interface Props {
@@ -21,23 +20,22 @@ export default function RealisticBackground({ code = 0, isDay = true }: Props) {
     return "clear";
   }, [code]);
 
-  const background = useMemo(() => {
-    if (!isDay) return "linear-gradient(180deg, #1e293b 0%, #020617 100%)";
+  const themeClass = useMemo(() => {
+    if (!isDay) return "bg-theme-night";
     const dayThemes: Record<WeatherTheme, string> = {
-      clear: "linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%)",
-      cloudy: "linear-gradient(180deg, #94a3b8 0%, #cbd5e1 100%)",
-      fog: "linear-gradient(180deg, #cbd5e1 0%, #e2e8f0 100%)",
-      rain: "linear-gradient(180deg, #475569 0%, #94a3b8 100%)",
-      snow: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
-      thunder: "linear-gradient(180deg, #334155 0%, #475569 100%)",
+      clear: "bg-theme-clear",
+      cloudy: "bg-theme-cloudy",
+      fog: "bg-theme-fog",
+      rain: "bg-theme-rain",
+      snow: "bg-theme-snow",
+      thunder: "bg-theme-thunder",
     };
     return dayThemes[theme];
   }, [theme, isDay]);
 
   return (
     <div 
-      className="fixed inset-0 -z-10 transition-all duration-1000"
-      style={{ background }}
+      className={`fixed inset-0 -z-10 transition-colors duration-1000 ${themeClass}`}
     />
   );
 }
