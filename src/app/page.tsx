@@ -91,7 +91,7 @@ export default function WeatherApp() {
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
     
     // Forced High-Contrast Logic
-    const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3);
+    const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3 || (currentCode >= 45 && currentCode <= 48));
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
     const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
     const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1]' : 'brightness-100'; 
