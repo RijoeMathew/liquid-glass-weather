@@ -21,7 +21,6 @@ export default function RealisticBackground({ code = 0, isDay = true }: Props) {
     return "clear";
   }, [code]);
 
-  // Forcefully map to background strings so transition works
   const background = useMemo(() => {
     if (!isDay) return "linear-gradient(180deg, #1e293b 0%, #020617 100%)";
     const dayThemes: Record<WeatherTheme, string> = {
@@ -35,13 +34,14 @@ export default function RealisticBackground({ code = 0, isDay = true }: Props) {
     return dayThemes[theme];
   }, [theme, isDay]);
 
+  // key prop ensures re-render on gradient change
   return (
     <motion.div 
       key={background}
       className="fixed inset-0 -z-10"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, background }}
-      transition={{ duration: 1, ease: "easeInOut" }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
     />
   );
 }
