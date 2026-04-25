@@ -39,6 +39,8 @@ export default function RealisticBackground({ code = 0, isDay = true }: Props) {
       className="fixed inset-0 -z-10"
       animate={{ background }}
       transition={{ duration: 1.5, ease: "easeInOut" }}
-    />
+    >
+      <div className="absolute inset-0 bg-black/10" />
+    </motion.div>
   );
 }
