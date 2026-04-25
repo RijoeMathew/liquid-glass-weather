@@ -95,9 +95,7 @@ export default function WeatherApp() {
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
     const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
     const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1]' : 'brightness-100'; 
-    const shadowClass = isLightBackground 
-        ? 'drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]' 
-        : 'drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]';
+    const shadowClass = ''; 
 
 
     return (
