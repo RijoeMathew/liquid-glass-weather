@@ -90,15 +90,23 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
     
-    // Forced High-Contrast Logic
-    const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3);
+    // Synchronized High-Contrast Logic with RealisticBackground themes
+    const isLightBackground = isDay && (
+        currentCode === 0 || // Clear
+        (currentCode >= 1 && currentCode <= 3) || // Cloudy
+        (currentCode >= 45 && currentCode <= 48) || // Fog
+        (currentCode >= 71 && currentCode <= 77) // Snow
+    );
+
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
-    const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
-    const iconFilter = isLightBackground ? 'invert-[0.8] brightness-[0.2]' : ''; // Make white icons dark
-    const shadowClass = isLightBackground ? 'drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]' : 'drop-shadow-2xl';
+    const subTextColor = isLightBackground ? 'text-slate-950/60' : 'text-white/60';
+    const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1] contrast-[1.2]' : ''; 
+    const shadowClass = isLightBackground 
+        ? 'drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]' 
+        : 'drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]';
 
     return (
-        <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor} selection:bg-blue-500 selection:text-white`}>
+        <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
             
             <div className="max-w-5xl mx-auto flex flex-col gap-16">
