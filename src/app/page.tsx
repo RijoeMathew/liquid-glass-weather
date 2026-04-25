@@ -22,6 +22,7 @@ interface WeatherData {
         windspeed: number;
         humidity: number;
         code: number;
+        is_day: number;
     };
     hourly: Array<{
         time: string;
@@ -77,7 +78,7 @@ export default function WeatherApp() {
             }
 
             const res = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto`
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto`
             );
 
             if (!res.ok) throw new Error("API Connection Failed");
@@ -90,6 +91,7 @@ export default function WeatherApp() {
                     windspeed: data.current.wind_speed_10m,
                     humidity: data.current.relative_humidity_2m,
                     code: data.current.weather_code,
+                    is_day: data.current.is_day,
                 },
                 hourly: data.hourly.time.map((time: string, i: number) => ({
                     time,
@@ -258,7 +260,10 @@ export default function WeatherApp() {
 
     return (
         <>
-        <LiquidBackground code={weather?.current.code} />
+        <LiquidBackground 
+            code={selectedDayIndex === 0 ? weather?.current.code : weather?.daily[selectedDayIndex].code} 
+            isDay={selectedDayIndex === 0 ? weather?.current.is_day === 1 : true}
+        />
         <main className="min-h-dvh p-4 sm:p-8 md:p-12 lg:p-20 flex flex-col items-center relative z-0">
 
             <AnimatePresence>
