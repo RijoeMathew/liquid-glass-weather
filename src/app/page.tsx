@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import RealisticBackground from "../components/RealisticBackground";
 import Lottie from "lottie-react";
 import clearDayAnim from "../../public/animations/clear-day.json";
@@ -13,7 +13,6 @@ import {
     Wind, Thermometer, MapPin, Loader2,
     Droplets, Navigation, Calendar, RefreshCw, Sun, Eye, Gauge, ArrowDown, Map
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface WeatherData {
     current: {
@@ -26,52 +25,19 @@ interface WeatherData {
         visibility: number;
         pressure: number;
     };
-    hourly: Array<{
-        time: string;
-        temp: number;
-        code: number;
-        rain_chance: number;
-    }>;
-    daily: Array<{
-        date: string;
-        temp_max: number;
-        temp_min: number;
-        condition: string;
-        code: number;
-        rain_chance: number;
-    }>;
+    hourly: Array<{ time: string; temp: number; code: number; }>;
+    daily: Array<{ date: string; temp_max: number; temp_min: number; condition: string; code: number; }>;
 }
 
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-    const [usingDefault, setUsingDefault] = useState(false);
-    const hourlyScrollRef = useRef<HTMLDivElement>(null);
 
-    const fetchWeather = async (lat?: number, lon?: number) => {
+    const fetchWeather = async () => {
         try {
             setLoading(true);
-            let latitude = lat ?? 43.6532;
-            let longitude = lon ?? -79.3832;
-
-            if (lat === undefined) {
-                try {
-                    const pos = await new Promise<GeolocationPosition>((res, rej) => {
-                        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 });
-                    });
-                    latitude = pos.coords.latitude;
-                    longitude = pos.coords.longitude;
-                    setUsingDefault(false);
-                } catch {
-                    setUsingDefault(true);
-                }
-            }
-
-            const res = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day,visibility,surface_pressure&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto`
-            );
-
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=43.6532&longitude=-79.3832&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day,visibility,surface_pressure&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`);
             const data = await res.json();
             setWeather({
                 current: {
@@ -84,26 +50,10 @@ export default function WeatherApp() {
                     visibility: data.current.visibility / 1000,
                     pressure: data.current.surface_pressure,
                 },
-                hourly: data.hourly.time.map((time: string, i: number) => ({
-                    time,
-                    temp: data.hourly.temperature_2m[i],
-                    code: data.hourly.weather_code[i],
-                    rain_chance: data.hourly.precipitation_probability[i],
-                })),
-                daily: data.daily.time.map((date: string, i: number) => ({
-                    date,
-                    temp_max: data.daily.temperature_2m_max[i],
-                    temp_min: data.daily.temperature_2m_min[i],
-                    condition: getWeatherDesc(data.daily.weather_code[i]),
-                    code: data.daily.weather_code[i],
-                    rain_chance: data.daily.precipitation_probability_max[i],
-                })).slice(0, 7),
+                hourly: data.hourly.time.map((time: string, i: number) => ({ time, temp: data.hourly.temperature_2m[i], code: data.hourly.weather_code[i] })),
+                daily: data.daily.time.map((date: string, i: number) => ({ date, temp_max: data.daily.temperature_2m_max[i], temp_min: data.daily.temperature_2m_min[i], condition: getWeatherDesc(data.daily.weather_code[i]), code: data.daily.weather_code[i] })).slice(0, 7),
             });
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     useEffect(() => { fetchWeather(); }, []);
@@ -114,190 +64,75 @@ export default function WeatherApp() {
         if (code <= 48) return "Foggy";
         if (code <= 65) return "Rainy";
         if (code <= 77) return "Snowy";
-        if (code >= 95) return "Thunderstorm";
-        return "Unknown";
+        return "Stormy";
     }
 
-    function getWeatherIcon(code: number, size: number = 24) {
-        let animation = clearDayAnim as any;
-        if (code > 0 && code <= 2) animation = partlyCloudyAnim;
-        else if (code <= 48) animation = cloudyAnim;
-        else if (code <= 67 || (code >= 80 && code <= 82)) animation = rainAnim;
-        else if (code <= 77 || (code >= 85 && code <= 86)) animation = snowAnim;
-        else if (code >= 95) animation = thunderAnim;
-
-        return <Lottie animationData={animation} style={{ width: size, height: size }} loop={true} />;
+    function getWeatherIcon(code: number, size: number = 32) {
+        let anim = clearDayAnim as any;
+        if (code > 0 && code <= 2) anim = partlyCloudyAnim;
+        else if (code <= 48) anim = cloudyAnim;
+        else if (code <= 67 || (code >= 80 && code <= 82)) anim = rainAnim;
+        else if (code <= 77 || (code >= 85 && code <= 86)) anim = snowAnim;
+        else anim = thunderAnim;
+        return <Lottie animationData={anim} style={{ width: size, height: size }} loop={true} />;
     }
 
-    const getTheme = (code: number, isDay: boolean) => {
-        if (!isDay) return { accent: "text-blue-400", tint: "bg-blue-500/10", border: "border-blue-500/20" };
-        if (code === 0) return { accent: "text-amber-500", tint: "bg-amber-500/10", border: "border-amber-500/20" };
-        if (code <= 3) return { accent: "text-slate-500", tint: "bg-slate-500/10", border: "border-slate-500/20" };
-        if (code <= 65) return { accent: "text-cyan-500", tint: "bg-cyan-500/10", border: "border-cyan-500/20" };
-        if (code <= 77) return { accent: "text-blue-300", tint: "bg-blue-300/10", border: "border-blue-300/20" };
-        return { accent: "text-indigo-500", tint: "bg-indigo-500/10", border: "border-indigo-500/20" };
-    };
-
-    if (loading) {
-        return (
-            <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 gap-4">
-                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing</p>
-            </div>
-        );
-    }
+    if (loading) return <div className="h-screen flex items-center justify-center text-slate-500 font-bold uppercase tracking-widest">Loading...</div>;
 
     const currentCode = selectedDayIndex === 0 ? weather?.current.code : weather?.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather?.current.is_day === 1 : true;
-    const theme = getTheme(currentCode || 0, isDay);
 
     return (
-        <>
-        <RealisticBackground code={currentCode} isDay={isDay} />
-        <main className="min-h-screen flex flex-col items-center py-8 sm:py-12 px-4 sm:px-8 relative z-10">
+        <main className="min-h-screen bg-[#f1f5f9] p-4 sm:p-6 pb-12">
+            <RealisticBackground code={currentCode} isDay={isDay} />
             
-            <div className="w-full max-w-[1200px] flex items-center justify-between mb-8 px-2">
-                <div className="flex items-center gap-3">
-                    <MapPin className={theme.accent} size={20} />
-                    <h2 className="text-lg font-bold tracking-tight text-slate-800">
-                        {usingDefault ? "Toronto, ON" : "Current Location"}
-                    </h2>
+            <div className="flex items-center justify-between max-w-[900px] mx-auto mb-6 px-2">
+                <div className="flex items-center gap-2 text-slate-900 font-bold">
+                    <Map size={20} /> Weather Dashboard
                 </div>
-                <button onClick={() => fetchWeather()} className="p-2 hover:bg-white/40 rounded-full transition-all active:scale-90">
-                    <RefreshCw size={20} className="text-slate-400" />
-                </button>
+                <button onClick={fetchWeather} className="p-2 bg-white rounded-xl shadow-sm hover:scale-105 transition-transform"><RefreshCw size={18} /></button>
             </div>
 
             <div className="bento-container">
-                {/* HERO TILE */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bento-tile tile-hero justify-between group">
-                    <div className="flex justify-between items-start">
-                        <div className="space-y-2">
-                            <p className="text-label-caps">Current Conditions</p>
-                            <h1 className={`text-huge ${theme.accent}`}>{Math.round(weather!.current.temp)}°</h1>
-                            <p className="text-xl font-bold text-slate-700/80 uppercase tracking-widest">{weather!.current.condition}</p>
-                        </div>
-                        <div className="hidden sm:block mt-[-20px] mr-[-20px]">
-                            {getWeatherIcon(weather!.current.code, 180)}
-                        </div>
-                        <div className="sm:hidden">
-                            {getWeatherIcon(weather!.current.code, 80)}
-                        </div>
+                <div className="bento-tile tile-hero">
+                    <p className="text-label-caps mb-4 text-slate-500">Currently</p>
+                    <h1 className="text-huge text-slate-950">{Math.round(weather!.current.temp)}°</h1>
+                    <p className="text-xl font-bold text-slate-600">{weather!.current.condition}</p>
+                    <div className="mt-auto pt-6 flex gap-4 text-slate-500 text-sm font-bold">
+                        <p>H: {Math.round(weather!.daily[0].temp_max)}°</p>
+                        <p>L: {Math.round(weather!.daily[0].temp_min)}°</p>
                     </div>
-                    
-                    <div className="flex gap-4 mt-8">
-                        <div className={`px-4 py-2 rounded-2xl ${theme.tint} border ${theme.border}`}>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Low</span>
-                            <span className="text-base font-black text-slate-800">{Math.round(weather!.daily[0].temp_min)}°</span>
-                        </div>
-                        <div className={`px-4 py-2 rounded-2xl ${theme.tint} border ${theme.border}`}>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">High</span>
-                            <span className="text-base font-black text-slate-800">{Math.round(weather!.daily[0].temp_max)}°</span>
-                        </div>
-                    </div>
-                </motion.div>
+                </div>
 
-                {/* 7-DAY FORECAST */}
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bento-tile tile-tall space-y-6">
-                    <div className="flex items-center gap-2">
-                        <Calendar size={16} className={theme.accent} />
-                        <p className="text-label-caps">Weekly Outlook</p>
+                <div className="bento-tile">
+                    <p className="text-label-caps text-slate-400 mb-4">Wind</p>
+                    <div className="flex items-end gap-2">
+                        <span className="text-4xl font-black">{weather!.current.windspeed}</span>
+                        <span className="text-slate-400 font-bold pb-2">km/h</span>
                     </div>
-                    <div className="space-y-2">
+                </div>
+
+                <div className="bento-tile">
+                    <p className="text-label-caps text-slate-400 mb-4">Humidity</p>
+                    <div className="flex items-end gap-2">
+                        <span className="text-4xl font-black">{weather!.current.humidity}</span>
+                        <span className="text-slate-400 font-bold pb-2">%</span>
+                    </div>
+                </div>
+
+                <div className="bento-tile tile-wide">
+                    <p className="text-label-caps text-slate-400 mb-6">7-Day Forecast</p>
+                    <div className="grid grid-cols-7 gap-2">
                         {weather!.daily.map((day, i) => (
-                            <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all ${selectedDayIndex === i ? theme.tint + ' ' + theme.border : 'hover:bg-white/40 border border-transparent'}`}>
-                                <span className="text-xs font-bold w-10 text-slate-500">{i === 0 ? "NOW" : new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                {getWeatherIcon(day.code, 26)}
-                                <div className="flex gap-2 font-bold text-xs w-12 justify-end">
-                                    <span className="text-slate-800">{Math.round(day.temp_max)}°</span>
-                                    <span className="text-slate-300">{Math.round(day.temp_min)}°</span>
-                                </div>
+                            <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex flex-col items-center gap-2 p-3 rounded-2xl cursor-pointer ${selectedDayIndex === i ? 'bg-slate-900 text-white' : 'bg-slate-100'}`}>
+                                <span className="text-[10px] font-bold">{new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                {getWeatherIcon(day.code, 24)}
+                                <span className="font-bold">{Math.round(day.temp_max)}°</span>
                             </div>
                         ))}
-                    </div>
-                </motion.div>
-
-                {/* HOURLY FORECAST */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bento-tile tile-wide">
-                    <div className="flex items-center gap-2 mb-6">
-                        <Navigation size={16} className={`rotate-45 ${theme.accent}`} />
-                        <p className="text-label-caps">Timeline</p>
-                    </div>
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                        {weather!.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
-                            <div key={i} className={`flex flex-col items-center min-w-[65px] space-y-3 p-3 rounded-2xl ${theme.tint}`}>
-                                <span className="text-[9px] font-bold text-slate-400">{new Date(h.time).getHours()}:00</span>
-                                {getWeatherIcon(h.code, 28)}
-                                <span className="text-base font-black text-slate-800">{Math.round(h.temp)}°</span>
-                            </div>
-                        ))}
-                    </div>
-                </motion.div>
-
-                {/* SMALL DATA TILES */}
-                <div className="bento-tile tile-small justify-between group">
-                    <div className="flex items-center gap-2">
-                        <Wind size={16} className="text-blue-400" />
-                        <p className="text-label-caps">Wind</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800">{weather!.current.windspeed} <span className="text-xs font-medium text-slate-400">km/h</span></p>
-                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(weather!.current.windspeed * 2, 100)}%` }} className="h-full bg-blue-400" />
-                    </div>
-                </div>
-
-                <div className="bento-tile tile-small justify-between">
-                    <div className="flex items-center gap-2">
-                        <Droplets size={16} className="text-cyan-400" />
-                        <p className="text-label-caps">Humidity</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800">{weather!.current.humidity}%</p>
-                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${weather!.current.humidity}%` }} className="h-full bg-cyan-400" />
-                    </div>
-                </div>
-
-                <div className="bento-tile tile-small justify-between">
-                    <div className="flex items-center gap-2">
-                        <Eye size={16} className="text-indigo-400" />
-                        <p className="text-label-caps">Optical</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800">{Math.round(weather!.current.visibility)} <span className="text-xs font-medium text-slate-400">km</span></p>
-                    <p className="text-[9px] font-bold text-indigo-400 uppercase mt-2 tracking-widest">Nominal</p>
-                </div>
-
-                <div className="bento-tile tile-small justify-between">
-                    <div className="flex items-center gap-2">
-                        <Gauge size={16} className="text-slate-400" />
-                        <p className="text-label-caps">Pressure</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800">{Math.round(weather!.current.pressure)}</p>
-                    <p className="text-[9px] font-bold text-slate-300 uppercase mt-2 tracking-widest">Steady</p>
-                </div>
-
-                <div className="bento-tile tile-small justify-between">
-                    <div className="flex items-center gap-2">
-                        <Thermometer size={16} className="text-rose-400" />
-                        <p className="text-label-caps">Feel</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800">{Math.round(weather!.current.temp)}°</p>
-                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                        <div className="h-full bg-rose-400 w-1/2" />
-                    </div>
-                </div>
-
-                <div className="bento-tile tile-small justify-between">
-                    <div className="flex items-center gap-2">
-                        <Sun size={16} className="text-amber-400" />
-                        <p className="text-label-caps">UV Index</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800">4 <span className="text-xs font-medium text-slate-400">Mod</span></p>
-                    <div className="w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                        <div className="h-full bg-amber-400 w-1/3" />
                     </div>
                 </div>
             </div>
         </main>
-        </>
     );
 }
