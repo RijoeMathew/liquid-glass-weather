@@ -21,13 +21,15 @@ interface WeatherData {
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
 
+    const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+
     const fetchWeather = async () => {
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=43.6532&longitude=-79.3832&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`);
         const data = await res.json();
         setWeather({
             current: { temp: data.current.temperature_2m, condition: getWeatherDesc(data.current.weather_code), code: data.current.weather_code, is_day: data.current.is_day },
             hourly: data.hourly.time.map((time: string, i: number) => ({ time, temp: data.hourly.temperature_2m[i], code: data.hourly.weather_code[i] })),
-            daily: data.daily.time.map((date: string, i: number) => ({ date, temp_max: data.daily.temperature_2m_max[i], temp_min: data.daily.temperature_2m_min[i], code: data.daily.weather_code[i] })),
+            daily: data.daily.time.map((date: string, i: number) => ({ date, temp_max: data.daily.temperature_2m_max[i], temp_min: data.daily.temperature_2m_min[i], condition: getWeatherDesc(data.daily.weather_code[i]), code: data.daily.weather_code[i] })),
         });
     };
 
@@ -54,9 +56,12 @@ export default function WeatherApp() {
 
     if (!weather) return <div className="h-screen flex items-center justify-center font-bold tracking-widest">LOADING...</div>;
 
+    const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
+    const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
+
     return (
         <main className="min-h-screen p-6 sm:p-10 flex flex-col items-center">
-            <RealisticBackground code={weather.current.code} isDay={weather.current.is_day === 1} />
+            <RealisticBackground code={currentCode} isDay={isDay} />
             
             <div className="w-full max-w-lg flex flex-col gap-6">
                 <div className="flex justify-between items-center">
@@ -65,15 +70,17 @@ export default function WeatherApp() {
                 </div>
 
                 {/* Hero */}
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-card p-10 flex flex-col items-center text-center">
-                    {getWeatherIcon(weather.current.code, 128)}
-                    <h1 className="text-8xl font-black">{Math.round(weather.current.temp)}°</h1>
-                    <p className="text-2xl font-medium opacity-80">{weather.current.condition}</p>
+                <motion.div key={selectedDayIndex} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-card p-10 flex flex-col items-center text-center">
+                    {getWeatherIcon(currentCode, 128)}
+                    <h1 className="text-8xl font-black">
+                        {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
+                    </h1>
+                    <p className="text-2xl font-medium opacity-80">{weather.daily[selectedDayIndex].condition}</p>
                 </motion.div>
 
                 {/* Hourly */}
                 <div className="glass-card p-6 overflow-x-auto flex gap-6 scrollbar-hide">
-                    {weather.hourly.slice(0, 24).map((h, i) => (
+                    {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                         <div key={i} className="flex flex-col items-center shrink-0">
                             <span className="text-xs font-bold opacity-60">{new Date(h.time).getHours()}:00</span>
                             {getWeatherIcon(h.code, 40)}
@@ -85,7 +92,7 @@ export default function WeatherApp() {
                 {/* Daily */}
                 <div className="glass-card p-6 flex flex-col gap-4">
                     {weather.daily.map((d, i) => (
-                        <div key={i} className="flex items-center justify-between">
+                        <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-2 rounded-xl cursor-pointer ${selectedDayIndex === i ? 'bg-white/20' : ''}`}>
                             <span className="font-bold w-16">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
                             {getWeatherIcon(d.code, 32)}
                             <div className="flex gap-4 font-black">
