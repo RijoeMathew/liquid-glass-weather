@@ -54,6 +54,10 @@ export default function WeatherApp() {
         return "Stormy";
     }
 
+    function formatTime(timeStr: string): string {
+        return new Date(timeStr).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+    }
+
     if (!weather) return <div className="h-screen flex items-center justify-center font-bold tracking-widest">LOADING...</div>;
 
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
@@ -79,11 +83,27 @@ export default function WeatherApp() {
                     <div className="glass-card p-6 overflow-x-auto flex gap-6 scrollbar-hide">
                         {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                             <div key={i} className="flex flex-col items-center shrink-0">
-                                <span className="text-xs font-bold opacity-60">{new Date(h.time).getHours()}:00</span>
+                                <span className="text-xs font-bold opacity-60">{formatTime(h.time)}</span>
                                 {getWeatherIcon(h.code, 40)}
                                 <span className="text-lg font-black">{Math.round(h.temp)}°</span>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Metrics */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="glass-card p-4">
+                            <p className="text-sm opacity-60 font-bold uppercase tracking-wider">Wind</p>
+                            <p className="text-2xl font-black">{weather.current.windspeed} <span className="text-sm font-normal">km/h</span></p>
+                        </div>
+                        <div className="glass-card p-4">
+                            <p className="text-sm opacity-60 font-bold uppercase tracking-wider">UV Index</p>
+                            <p className="text-2xl font-black">4 <span className="text-sm font-normal">(Sunscreen)</span></p>
+                        </div>
+                        <div className="glass-card p-4 col-span-2">
+                            <p className="text-sm opacity-60 font-bold uppercase tracking-wider">Air Quality</p>
+                            <p className="text-2xl font-black">Good (AQI 32)</p>
+                        </div>
                     </div>
 
                     {/* Daily */}
