@@ -90,17 +90,14 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
     
-    // Synchronized High-Contrast Logic with RealisticBackground themes
-    const isLightBackground = isDay && (
-        currentCode === 0 || // Clear
-        (currentCode >= 1 && currentCode <= 3) || // Cloudy
-        (currentCode >= 45 && currentCode <= 48) || // Fog
-        (currentCode >= 71 && currentCode <= 77) // Snow
-    );
-
+    // Selection logic based on selectedDayIndex
+    const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
+    
+    // Contrast based on the selected day
+    const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3);
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
-    const subTextColor = isLightBackground ? 'text-slate-950/60' : 'text-white/60';
-    const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1] contrast-[1.2]' : ''; 
+    const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
+    const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1]' : ''; 
     const shadowClass = isLightBackground 
         ? 'drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)]' 
         : 'drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]';
@@ -177,7 +174,7 @@ export default function WeatherApp() {
                                     <div 
                                         key={i} 
                                         onClick={() => setSelectedDayIndex(i)} 
-                                        className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? (isLightBackground ? 'bg-black/10' : 'bg-white/10') : 'hover:opacity-100 opacity-40'}`}
+                                        className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? 'bg-black/10 font-black' : 'hover:opacity-100 opacity-40'}`}
                                     >
                                         <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
                                         <div className={`flex-1 flex justify-center transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(d.code, 28)}</div>
