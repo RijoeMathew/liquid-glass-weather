@@ -27,7 +27,16 @@ export default function WeatherApp() {
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=43.6532&longitude=-79.3832&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`);
         const data = await res.json();
         setWeather({
-            current: { temp: data.current.temperature_2m, condition: getWeatherDesc(data.current.weather_code), code: data.current.weather_code, is_day: data.current.is_day },
+            current: { 
+                temp: data.current.temperature_2m, 
+                condition: getWeatherDesc(data.current.weather_code), 
+                code: data.current.weather_code, 
+                is_day: data.current.is_day,
+                windspeed: data.current.wind_speed_10m,
+                humidity: data.current.relative_humidity_2m,
+                visibility: data.current.visibility / 1000,
+                pressure: data.current.surface_pressure
+            },
             hourly: data.hourly.time.map((time: string, i: number) => ({ time, temp: data.hourly.temperature_2m[i], code: data.hourly.weather_code[i] })),
             daily: data.daily.time.map((date: string, i: number) => ({ date, temp_max: data.daily.temperature_2m_max[i], temp_min: data.daily.temperature_2m_min[i], condition: getWeatherDesc(data.daily.weather_code[i]), code: data.daily.weather_code[i] })),
         });
