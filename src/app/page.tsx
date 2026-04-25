@@ -58,45 +58,44 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
 
-    return (
-        <main className="min-h-screen text-slate-950 p-6 md:p-12">
+<main className="min-h-screen p-6 md:p-12">
             <RealisticBackground code={currentCode} isDay={isDay} />
             
-            <div className="max-w-4xl mx-auto">
-                <header className="flex justify-between items-center mb-16 text-stroke">
-                    <div className="flex items-center gap-2 font-black uppercase text-xs"><MapPin size={16} /> Toronto</div>
+            <div className="max-w-4xl mx-auto text-slate-900">
+                <header className="flex justify-between items-center mb-16">
+                    <div className="flex items-center gap-2 font-black uppercase text-xs tracking-widest"><MapPin size={16} /> Toronto</div>
                     <button onClick={fetchWeather}><RefreshCw size={16} /></button>
                 </header>
 
                 <div className="grid md:grid-cols-2 gap-12 items-center">
                     <motion.div key={selectedDayIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center">
-                        {getWeatherIcon(currentCode, 200)}
-                        <h1 className="text-9xl font-black mt-6 text-stroke">
+                        <div className="drop-shadow-2xl">{getWeatherIcon(currentCode, 200)}</div>
+                        <h1 className="text-9xl font-black mt-6 drop-shadow-md">
                             {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
                         </h1>
-                        <p className="text-3xl font-bold uppercase mt-2 text-stroke">{weather.daily[selectedDayIndex].condition}</p>
+                        <p className="text-3xl font-bold uppercase mt-2 drop-shadow-md">{weather.daily[selectedDayIndex].condition}</p>
                     </motion.div>
 
                     <div className="space-y-12">
-                        <div className="grid grid-cols-2 gap-8 text-stroke">
-                            <div><p className="text-xs uppercase font-black opacity-50">Wind</p><p className="text-2xl font-black">{weather.current.windspeed} km/h</p></div>
-                            <div><p className="text-xs uppercase font-black opacity-50">Humidity</p><p className="text-2xl font-black">{weather.current.humidity}%</p></div>
+                        <div className="grid grid-cols-2 gap-8">
+                            <div><p className="text-xs uppercase font-black opacity-50 tracking-widest">Wind</p><p className="text-2xl font-black">{weather.current.windspeed} km/h</p></div>
+                            <div><p className="text-xs uppercase font-black opacity-50 tracking-widest">Humidity</p><p className="text-2xl font-black">{weather.current.humidity}%</p></div>
                         </div>
 
-                        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide text-stroke">
+                        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
                             {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                                 <div key={i} className="flex flex-col items-center gap-2 shrink-0">
-                                    <span className="text-[10px] font-bold opacity-50">{new Date(h.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</span>
+                                    <span className="text-[10px] font-bold opacity-50 tracking-widest">{new Date(h.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</span>
                                     {getWeatherIcon(h.code, 40)}
                                     <span className="font-black text-xl">{Math.round(h.temp)}°</span>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="grid gap-4 text-stroke">
+                        <div className="grid gap-4">
                             {weather.daily.map((d, i) => (
-                                <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between cursor-pointer p-4 rounded-xl ${selectedDayIndex === i ? 'bg-white/30' : 'bg-transparent'}`}>
-                                    <span className="font-bold">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between cursor-pointer p-4 rounded-2xl transition-all ${selectedDayIndex === i ? 'bg-black/10' : 'hover:bg-black/5'}`}>
+                                    <span className="font-bold w-20">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
                                     {getWeatherIcon(d.code, 32)}
                                     <span className="font-black text-lg">{Math.round(d.temp_max)}° / {Math.round(d.temp_min)}°</span>
                                 </div>
@@ -106,5 +105,4 @@ export default function WeatherApp() {
                 </div>
             </div>
         </main>
-    );
 }
