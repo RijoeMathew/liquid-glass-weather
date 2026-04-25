@@ -1,10 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bento-gap: 1.5rem;
-  --bento-radius: 2.5rem;
-  --elevation-low: 0 2px 4px rgba(0,0,0,0.1);
-  --elevation-high: 0 20px 40px rgba(0,0,0,0.2);
+  --bento-gap: 1.75rem;
+  --bento-radius: 2rem;
+  
+  /* Physical Elevation System */
+  --surface-color: #0f172a;
+  --surface-highlight: rgba(255, 255, 255, 0.05);
+  --surface-shadow: rgba(0, 0, 0, 0.4);
+  
+  --elevation-raised: 
+    0 20px 25px -5px var(--surface-shadow),
+    0 8px 10px -6px var(--surface-shadow),
+    inset 0 1px 1px var(--surface-highlight);
+    
+  --elevation-inset: 
+    inset 0 2px 4px var(--surface-shadow),
+    0 1px 1px var(--surface-highlight);
 }
 
 html, body {
@@ -12,7 +24,7 @@ html, body {
   padding: 0;
   overflow-x: hidden;
   background: #020617;
-  color: white;
+  color: #f8fafc;
   min-height: 100dvh;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -22,35 +34,47 @@ html, body {
   .bento-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: minmax(160px, auto);
+    grid-auto-rows: minmax(180px, auto);
     gap: var(--bento-gap);
     width: 100%;
-    max-width: 1200px;
+    max-width: 1300px;
     padding: var(--bento-gap);
   }
 
-  /* Mobile: Single Column */
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .bento-container {
-      grid-template-columns: 1fr;
-      grid-auto-rows: auto;
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
-  .bento-tile {
-    @apply relative overflow-hidden flex flex-col p-8 transition-all duration-500;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--bento-radius);
-    box-shadow: var(--elevation-low);
+  @media (max-width: 640px) {
+    .bento-container {
+      grid-template-columns: 1fr;
+    }
   }
 
-  .bento-tile:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: var(--elevation-high);
-    transform: translateY(-4px);
+  /* Tactile Bento Tile: SOLID, NO BLUR */
+  .tactile-tile {
+    @apply relative flex flex-col p-8 transition-all duration-300;
+    background-color: var(--surface-color);
+    border-radius: var(--bento-radius);
+    box-shadow: var(--elevation-raised);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+
+  .tactile-tile:hover {
+    transform: translateY(-2px);
+    background-color: #1e293b;
+    box-shadow: 
+      0 25px 30px -5px var(--surface-shadow),
+      inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  }
+
+  /* Physical "Well" for icons or small metrics */
+  .tactile-well {
+    @apply rounded-3xl p-4 flex items-center justify-center;
+    background-color: #020617;
+    box-shadow: var(--elevation-inset);
   }
 
   /* Bento Sizes */
@@ -59,7 +83,16 @@ html, body {
   .tile-tall { grid-row: span 2; }
   .tile-small { grid-column: span 1; }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
+    .tile-hero, .tile-wide, .tile-tall {
+      grid-column: span 2;
+    }
+    .tile-small {
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 640px) {
     .tile-hero, .tile-wide, .tile-tall, .tile-small {
       grid-column: span 1;
       grid-row: auto;
@@ -67,11 +100,12 @@ html, body {
   }
 
   .text-huge {
-    @apply text-8xl sm:text-9xl font-black tracking-tighter leading-none;
+    @apply text-8xl sm:text-9xl font-black tracking-tighter leading-none text-white;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
   .text-label-caps {
-    @apply text-[10px] font-black uppercase tracking-[0.2em] text-white/40;
+    @apply text-[11px] font-black uppercase tracking-[0.25em] text-blue-400/80;
   }
 }
 
@@ -79,7 +113,7 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: -5;
-  opacity: 0.04;
+  opacity: 0.03;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
