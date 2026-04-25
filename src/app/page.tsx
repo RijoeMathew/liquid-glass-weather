@@ -93,6 +93,14 @@ export default function WeatherApp() {
     const isActuallyDay = currentHour >= 6 && currentHour < 18;
 
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
+    
+    // Determine if it is currently day based on the timestamp of the selected data
+    const getIsDayForTime = (timeStr: string) => {
+        const hour = new Date(timeStr).getHours();
+        return hour >= 6 && hour < 18;
+    };
+    
+    // For today, use real-time. For future days, assume day.
     const isDay = selectedDayIndex === 0 ? isActuallyDay : true;
     
     // Forced High-Contrast Logic (Background only)
