@@ -95,9 +95,10 @@ export default function WeatherApp() {
     const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3 || (currentCode >= 45 && currentCode <= 48));
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
     const subTextColor = isLightBackground ? 'text-slate-900/70' : 'text-white/60';
-    const iconFilter = isLightBackground ? 'invert-[0.9] brightness-[0.1]' : 'brightness-100'; 
     const shadowClass = ''; 
 
+    // Helper to pass theme to Lottie components (if supported) or identify when to use dark icons
+    const isDarkModeIcon = isLightBackground && (currentCode >= 1 && currentCode <= 48);
 
     return (
         <main className={`min-h-screen p-6 md:p-16 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
@@ -117,7 +118,9 @@ export default function WeatherApp() {
                     animate={{ opacity: 1, y: 0 }} 
                     className={`md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left ${shadowClass}`}
                 >
-                    <div className={`mb-6 transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(currentCode, 180)}</div>
+                    <div className="mb-6 transition-all duration-1000">
+                        {isDarkModeIcon ? <div className="invert-[0.9] brightness-[0.1]">{getWeatherIcon(currentCode, 180)}</div> : getWeatherIcon(currentCode, 180)}
+                    </div>
                     <h1 className="text-[10rem] sm:text-[12rem] font-black leading-[0.8] tracking-tighter">
                         {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
                     </h1>
@@ -153,8 +156,8 @@ export default function WeatherApp() {
                             {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                                 <div key={i} className="flex flex-col items-center gap-3 shrink-0">
                                     <span className={`text-[10px] font-bold ${subTextColor}`}>{formatTime(h.time)}</span>
-                                    <div className={`transition-all duration-1000 ${iconFilter}`}>
-                                        {getWeatherIcon(h.code, 36)}
+                                    <div className="transition-all duration-1000">
+                                        {(isLightBackground && (h.code >= 1 && h.code <= 48)) ? <div className="invert-[0.9] brightness-[0.1]">{getWeatherIcon(h.code, 36)}</div> : getWeatherIcon(h.code, 36)}
                                     </div>
                                     <span className="font-black text-lg">{Math.round(h.temp)}°</span>
                                 </div>
@@ -173,7 +176,9 @@ export default function WeatherApp() {
                                     className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? 'bg-black/10 font-black' : 'hover:opacity-100 opacity-40'}`}
                                 >
                                     <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                    <div className={`flex-1 flex justify-center transition-all duration-1000 ${iconFilter}`}>{getWeatherIcon(d.code, 28)}</div>
+                                    <div className="flex-1 flex justify-center transition-all duration-1000">
+                                        {(isLightBackground && (d.code >= 1 && d.code <= 48)) ? <div className="invert-[0.9] brightness-[0.1]">{getWeatherIcon(d.code, 28)}</div> : getWeatherIcon(d.code, 28)}
+                                    </div>
                                     <div className="font-black text-right w-20 flex gap-3 justify-end text-sm">
                                         <span>{Math.round(d.temp_max)}°</span>
                                         <span className="opacity-30">{Math.round(d.temp_min)}°</span>
