@@ -60,47 +60,45 @@ export default function WeatherApp() {
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
 
     return (
-        <main className="min-h-screen p-6 sm:p-10 flex flex-col items-center">
+        <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-10">
             <RealisticBackground code={currentCode} isDay={isDay} />
             
-            <div className="w-full max-w-lg flex flex-col gap-6">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 font-bold"><MapPin size={20} /> Toronto</div>
-                    <button onClick={fetchWeather}><RefreshCw size={20} /></button>
-                </div>
-
-                {/* Hero */}
-                <motion.div key={selectedDayIndex} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-card p-10 flex flex-col items-center text-center">
-                    {getWeatherIcon(currentCode, 128)}
-                    <h1 className="text-8xl font-black">
+            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Hero Card */}
+                <motion.div key={selectedDayIndex} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-card p-10 flex flex-col items-center text-center justify-center">
+                    {getWeatherIcon(currentCode, 160)}
+                    <h1 className="text-9xl font-black mt-4">
                         {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
                     </h1>
-                    <p className="text-2xl font-medium opacity-80">{weather.daily[selectedDayIndex].condition}</p>
+                    <p className="text-3xl font-medium opacity-80">{weather.daily[selectedDayIndex].condition}</p>
                 </motion.div>
 
-                {/* Hourly */}
-                <div className="glass-card p-6 overflow-x-auto flex gap-6 scrollbar-hide">
-                    {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
-                        <div key={i} className="flex flex-col items-center shrink-0">
-                            <span className="text-xs font-bold opacity-60">{new Date(h.time).getHours()}:00</span>
-                            {getWeatherIcon(h.code, 40)}
-                            <span className="text-lg font-black">{Math.round(h.temp)}°</span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Daily */}
-                <div className="glass-card p-6 flex flex-col gap-4">
-                    {weather.daily.map((d, i) => (
-                        <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-2 rounded-xl cursor-pointer ${selectedDayIndex === i ? 'bg-white/20' : ''}`}>
-                            <span className="font-bold w-16">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                            {getWeatherIcon(d.code, 32)}
-                            <div className="flex gap-4 font-black">
-                                <span>{Math.round(d.temp_max)}°</span>
-                                <span className="opacity-40">{Math.round(d.temp_min)}°</span>
+                {/* Forecast Side Panel */}
+                <div className="flex flex-col gap-6">
+                    {/* Hourly */}
+                    <div className="glass-card p-6 overflow-x-auto flex gap-6 scrollbar-hide">
+                        {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
+                            <div key={i} className="flex flex-col items-center shrink-0">
+                                <span className="text-xs font-bold opacity-60">{new Date(h.time).getHours()}:00</span>
+                                {getWeatherIcon(h.code, 40)}
+                                <span className="text-lg font-black">{Math.round(h.temp)}°</span>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+
+                    {/* Daily */}
+                    <div className="glass-card p-6 flex flex-col gap-4 flex-grow">
+                        {weather.daily.map((d, i) => (
+                            <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between p-3 rounded-xl cursor-pointer ${selectedDayIndex === i ? 'bg-white/20' : ''}`}>
+                                <span className="font-bold w-20">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                {getWeatherIcon(d.code, 32)}
+                                <div className="flex gap-4 font-black">
+                                    <span>{Math.round(d.temp_max)}°</span>
+                                    <span className="opacity-40">{Math.round(d.temp_min)}°</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </main>
