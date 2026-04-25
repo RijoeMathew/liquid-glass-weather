@@ -90,9 +90,6 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
     
-    // Selection logic based on selectedDayIndex
-    const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
-    
     // Contrast based on the selected day
     const isLightBackground = isDay && (currentCode === 0 || currentCode <= 3);
     const textColor = isLightBackground ? 'text-slate-950' : 'text-white';
