@@ -64,7 +64,8 @@ export default function WeatherApp() {
 
     function getWeatherIcon(code: number, size: number = 64) {
         let anim = clearDayAnim as any;
-        if (code > 0 && code <= 2) anim = partlyCloudyAnim;
+        if (code === 0) anim = clearDayAnim;
+        else if (code >= 1 && code <= 3) anim = partlyCloudyAnim;
         else if (code <= 48) anim = cloudyAnim;
         else if (code <= 67 || (code >= 80 && code <= 82)) anim = rainAnim;
         else if (code <= 77 || (code >= 85 && code <= 86)) anim = snowAnim;
@@ -74,7 +75,7 @@ export default function WeatherApp() {
 
     function getWeatherDesc(code: number): string {
         if (code === 0) return "Clear Sky";
-        if (code <= 3) return "Cloudy";
+        if (code <= 3) return "Partly Cloudy";
         if (code <= 48) return "Foggy";
         if (code <= 65) return "Rainy";
         if (code <= 77) return "Snowy";
