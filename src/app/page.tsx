@@ -62,8 +62,8 @@ export default function WeatherApp() {
 
     useEffect(() => { fetchWeather(); }, []);
 
-    function getWeatherIcon(code: number, size: number = 64) {
-        let anim = clearDayAnim as any;
+    function getWeatherIcon(code: number, size: number = 64, isDay: boolean = true) {
+        let anim = isDay ? clearDayAnim : clearDayAnim; // Placeholder for night animations if available
         if (code === 0) anim = clearDayAnim;
         else if (code >= 1 && code <= 3) anim = partlyCloudyAnim;
         else if (code <= 48) anim = cloudyAnim;
@@ -163,7 +163,7 @@ export default function WeatherApp() {
                             {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                                 <div key={i} className="flex flex-col items-center gap-3 shrink-0">
                                     <span className={`text-[10px] font-bold ${subTextColor}`}>{formatTime(h.time)}</span>
-                                    <div className="transition-all duration-1000">{getWeatherIcon(h.code, 36)}</div>
+                                    <div className="transition-all duration-1000">{getWeatherIcon(h.code, 36, getIsDayForTime(h.time))}</div>
                                     <span className="font-black text-lg">{Math.round(h.temp)}°</span>
                                 </div>
                             ))}
@@ -181,7 +181,7 @@ export default function WeatherApp() {
                                     className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? 'bg-black/10 font-black' : 'hover:opacity-100 opacity-40'}`}
                                 >
                                     <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                    <div className="flex-1 flex justify-center transition-all duration-1000">{getWeatherIcon(d.code, 28)}</div>
+                                    <div className="flex-1 flex justify-center transition-all duration-1000">{getWeatherIcon(d.code, 28, true)}</div>
                                     <div className="font-black text-right w-20 flex gap-3 justify-end text-sm">
                                         <span>{Math.round(d.temp_max)}°</span>
                                         <span className="opacity-30">{Math.round(d.temp_min)}°</span>
