@@ -1,55 +1,20 @@
 @import "tailwindcss";
 
-:root {
-  --bento-gap: 1.25rem;
-  --bento-radius: 1.5rem;
-  --surface-bg: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #475569;
-}
-
 html, body {
   margin: 0;
   padding: 0;
-  background: #f1f5f9;
-  color: var(--text-main);
+  overflow-x: hidden;
+  color: white;
   min-height: 100dvh;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 @layer components {
-  /* Mobile-first layout: simple stack */
-  .bento-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--bento-gap);
-    width: 100%;
-    max-width: 900px;
-    padding: 1rem;
-    margin: 0 auto;
-  }
-
-  /* Tablet/Desktop: grid */
-  @media (min-width: 768px) {
-    .bento-container {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      padding: 2rem;
-    }
-  }
-
-  .bento-tile {
-    @apply flex flex-col p-6 border border-slate-200 shadow-sm rounded-3xl bg-white;
-  }
-
-  .tile-hero { grid-column: span 2; }
-  
-  .text-huge {
-    @apply text-6xl md:text-8xl font-black tracking-tighter leading-none text-slate-900;
-  }
-
-  .text-label-caps {
-    @apply text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500;
+  .glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 2rem;
   }
 }
 
