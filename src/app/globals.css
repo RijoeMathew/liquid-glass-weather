@@ -4,17 +4,19 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  color: white;
+  background: #f8fafc;
+  color: #0f172a;
   min-height: 100dvh;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 @layer components {
-  .glass-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 2rem;
+  .label {
+    @apply text-[10px] font-black uppercase tracking-[0.2em] text-slate-400;
+  }
+  .value {
+    @apply text-lg font-bold text-slate-900;
   }
 }
 
