@@ -34,14 +34,10 @@ export default function RealisticBackground({ code = 0, isDay = true }: Props) {
     return dayThemes[theme];
   }, [theme, isDay]);
 
-  // key prop ensures re-render on gradient change
   return (
-    <motion.div 
-      key={background}
-      className="fixed inset-0 -z-10"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, background }}
-      transition={{ duration: 1.5, ease: "easeInOut" }}
+    <div 
+      className="fixed inset-0 -z-10 transition-all duration-1000"
+      style={{ background }}
     />
   );
 }
