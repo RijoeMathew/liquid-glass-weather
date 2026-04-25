@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 interface WeatherData {
     current: { temp: number; condition: string; code: number; is_day: number; };
     hourly: Array<{ time: string; temp: number; code: number; }>;
-    daily: Array<{ date: string; temp_max: number; temp_min: number; code: number; }>;
+    daily: Array<{ date: string; temp_max: number; temp_min: number; condition: string; code: number; }>;
 }
 
 export default function WeatherApp() {
