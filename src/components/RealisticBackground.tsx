@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMemo } from "react";
 
 interface Props {
@@ -8,7 +8,8 @@ interface Props {
   isDay?: boolean;
 }
 
-export default function RealisticBackground({ code = 0, isDay = true }: Props) {
+type WeatherTheme = "clear" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
+
 export default function RealisticBackground({ code = 0, isDay = true }: Props) {
   const theme = useMemo((): WeatherTheme => {
     if (code === 0) return "clear";
