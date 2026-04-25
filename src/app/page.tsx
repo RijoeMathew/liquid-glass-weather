@@ -67,44 +67,52 @@ export default function WeatherApp() {
     const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
     const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
 
+    const isBackgroundLight = (code: number, isDay: boolean) => {
+        if (!isDay) return false;
+        return code === 0 || code <= 3;
+    };
+
+    const isLight = isBackgroundLight(currentCode, isDay);
+    const textColor = isLight ? 'text-slate-900' : 'text-white';
+
     return (
-        <main className="min-h-screen py-16 px-8 max-w-2xl mx-auto flex flex-col items-center">
+        <main className={`min-h-screen py-16 px-8 max-w-2xl mx-auto flex flex-col items-center ${textColor}`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
             
-            <div className="flex justify-between w-full mb-16 opacity-40">
+            <div className="flex justify-between w-full mb-16 opacity-60">
                 <div className="flex items-center gap-2 font-black uppercase tracking-widest text-xs"><MapPin size={16} /> Toronto</div>
                 <button onClick={fetchWeather}><RefreshCw size={16} /></button>
             </div>
 
             <motion.div key={selectedDayIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-16">
                 {getWeatherIcon(currentCode, 120)}
-                <h1 className="text-9xl font-black my-4">
+                <h1 className="text-9xl font-black my-4 drop-shadow-md">
                     {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
                 </h1>
-                <p className="text-xl font-bold uppercase tracking-[0.2em] opacity-60">{weather.daily[selectedDayIndex].condition}</p>
+                <p className="text-xl font-bold uppercase tracking-[0.2em] opacity-80">{weather.daily[selectedDayIndex].condition}</p>
             </motion.div>
 
             <div className="w-full flex justify-between gap-8 mb-16">
                 <div className="flex flex-col gap-1">
-                    <span className="label">Wind</span>
-                    <span className="value">{weather.current.windspeed} km/h</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Wind</span>
+                    <span className="text-lg font-black">{weather.current.windspeed} km/h</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                    <span className="label">UV Index</span>
-                    <span className="value">4 (Low)</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">UV Index</span>
+                    <span className="text-lg font-black">4</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                    <span className="label">Air Quality</span>
-                    <span className="value">32 AQI</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Air Quality</span>
+                    <span className="text-lg font-black">Good</span>
                 </div>
             </div>
 
-            <div className="w-full overflow-x-auto flex gap-10 pb-8 scrollbar-hide border-b border-slate-200 mb-8">
+            <div className="w-full overflow-x-auto flex gap-10 pb-8 scrollbar-hide border-b border-white/20 mb-8">
                 {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                     <div key={i} className="flex flex-col items-center gap-3 shrink-0">
-                        <span className="text-[10px] font-bold opacity-40">{new Date(h.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</span>
+                        <span className="text-[10px] font-bold opacity-60">{new Date(h.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</span>
                         {getWeatherIcon(h.code, 32)}
-                        <span className="font-black">{Math.round(h.temp)}°</span>
+                        <span className="font-black text-lg">{Math.round(h.temp)}°</span>
                     </div>
                 ))}
             </div>
@@ -114,7 +122,7 @@ export default function WeatherApp() {
                     <div key={i} onClick={() => setSelectedDayIndex(i)} className={`flex items-center justify-between cursor-pointer py-2 ${selectedDayIndex === i ? 'opacity-100' : 'opacity-40'}`}>
                         <span className="font-bold w-16">{i === 0 ? "Today" : new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</span>
                         {getWeatherIcon(d.code, 24)}
-                        <span className="font-black">{Math.round(d.temp_max)}°</span>
+                        <span className="font-black text-lg">{Math.round(d.temp_max)}°</span>
                     </div>
                 ))}
             </div>
