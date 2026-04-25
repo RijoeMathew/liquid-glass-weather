@@ -1,66 +1,74 @@
 import Lottie from "lottie-react";
-import { Cloud, CloudFog, CloudLightning, CloudMoon, CloudRain, CloudSnow, MoonStar } from "lucide-react";
-import clearDayAnim from "../../public/animations/clear-day.json";
-import cloudyAnim from "../../public/animations/cloudy.json";
-import partlyCloudyAnim from "../../public/animations/partly-cloudy-day.json";
-import rainAnim from "../../public/animations/rain.json";
-import snowAnim from "../../public/animations/snow.json";
-import thunderAnim from "../../public/animations/thunder.json";
+import clearDayAnim from "@meteocons/lottie/flat/clear-day.json";
+import clearNightAnim from "@meteocons/lottie/flat/clear-night.json";
+import fogDayAnim from "@meteocons/lottie/flat/fog-day.json";
+import fogNightAnim from "@meteocons/lottie/flat/fog-night.json";
+import mostlyClearDayAnim from "@meteocons/lottie/flat/mostly-clear-day.json";
+import mostlyClearNightAnim from "@meteocons/lottie/flat/mostly-clear-night.json";
+import overcastDayAnim from "@meteocons/lottie/flat/overcast-day.json";
+import overcastNightAnim from "@meteocons/lottie/flat/overcast-night.json";
+import overcastDayDrizzleAnim from "@meteocons/lottie/flat/overcast-day-drizzle.json";
+import overcastNightDrizzleAnim from "@meteocons/lottie/flat/overcast-night-drizzle.json";
+import overcastDayRainAnim from "@meteocons/lottie/flat/overcast-day-rain.json";
+import overcastNightRainAnim from "@meteocons/lottie/flat/overcast-night-rain.json";
+import overcastDaySnowAnim from "@meteocons/lottie/flat/overcast-day-snow.json";
+import overcastNightSnowAnim from "@meteocons/lottie/flat/overcast-night-snow.json";
+import partlyCloudyDayAnim from "@meteocons/lottie/flat/partly-cloudy-day.json";
+import partlyCloudyNightAnim from "@meteocons/lottie/flat/partly-cloudy-night.json";
+import thunderstormsOvercastDayAnim from "@meteocons/lottie/flat/thunderstorms-overcast-day.json";
+import thunderstormsOvercastNightAnim from "@meteocons/lottie/flat/thunderstorms-overcast-night.json";
+import thunderstormsOvercastDayHailAnim from "@meteocons/lottie/flat/thunderstorms-overcast-day-hail.json";
+import thunderstormsOvercastNightHailAnim from "@meteocons/lottie/flat/thunderstorms-overcast-night-hail.json";
 
-type WeatherCategory = "clear" | "partly-cloudy" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
+type WeatherAnimation = Record<string, unknown>;
 
-function getWeatherCategory(code: number): WeatherCategory {
-    if (code === 0) return "clear";
-    if (code === 1 || code === 2) return "partly-cloudy";
-    if (code === 3) return "cloudy";
-    if (code === 45 || code === 48) return "fog";
-    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
-    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
-    if (code >= 95 && code <= 99) return "thunder";
-    return "cloudy";
+function getWeatherAnimation(code: number, isDay: boolean): WeatherAnimation {
+    switch (code) {
+        case 0:
+            return isDay ? clearDayAnim : clearNightAnim;
+        case 1:
+            return isDay ? mostlyClearDayAnim : mostlyClearNightAnim;
+        case 2:
+            return isDay ? partlyCloudyDayAnim : partlyCloudyNightAnim;
+        case 3:
+            return isDay ? overcastDayAnim : overcastNightAnim;
+        case 45:
+        case 48:
+            return isDay ? fogDayAnim : fogNightAnim;
+        case 51:
+        case 53:
+        case 55:
+        case 56:
+        case 57:
+            return isDay ? overcastDayDrizzleAnim : overcastNightDrizzleAnim;
+        case 61:
+        case 63:
+        case 65:
+        case 66:
+        case 67:
+        case 80:
+        case 81:
+        case 82:
+            return isDay ? overcastDayRainAnim : overcastNightRainAnim;
+        case 71:
+        case 73:
+        case 75:
+        case 77:
+        case 85:
+        case 86:
+            return isDay ? overcastDaySnowAnim : overcastNightSnowAnim;
+        case 96:
+        case 99:
+            return isDay ? thunderstormsOvercastDayHailAnim : thunderstormsOvercastNightHailAnim;
+        case 95:
+            return isDay ? thunderstormsOvercastDayAnim : thunderstormsOvercastNightAnim;
+        default:
+            return isDay ? overcastDayAnim : overcastNightAnim;
+    }
 }
 
 export function getWeatherIcon(code: number, size: number = 24, className: string = "", isDay: boolean = true) {
-    const category = getWeatherCategory(code);
-    const iconProps = { size, strokeWidth: 1.75 };
-
-    if (!isDay) {
-        const nightIcon =
-            category === "clear" ? (
-                <MoonStar {...iconProps} />
-            ) : category === "partly-cloudy" ? (
-                <CloudMoon {...iconProps} />
-            ) : category === "cloudy" ? (
-                <Cloud {...iconProps} />
-            ) : category === "fog" ? (
-                <CloudFog {...iconProps} />
-            ) : category === "rain" ? (
-                <CloudRain {...iconProps} />
-            ) : category === "snow" ? (
-                <CloudSnow {...iconProps} />
-            ) : (
-                <CloudLightning {...iconProps} />
-            );
-
-        return (
-            <div style={{ width: size, height: size }} className={`flex items-center justify-center ${className}`}>
-                {nightIcon}
-            </div>
-        );
-    }
-
-    const animation =
-        category === "clear"
-            ? clearDayAnim
-            : category === "partly-cloudy"
-              ? partlyCloudyAnim
-              : category === "cloudy" || category === "fog"
-                ? cloudyAnim
-                : category === "rain"
-                  ? rainAnim
-                  : category === "snow"
-                    ? snowAnim
-                    : thunderAnim;
+    const animation = getWeatherAnimation(code, isDay);
 
     return (
         <div style={{ width: size, height: size }} className={className}>

@@ -1,26 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Lottie from "lottie-react";
 import { motion } from "framer-motion";
-import {
-    Cloud,
-    CloudFog,
-    CloudLightning,
-    CloudMoon,
-    CloudRain,
-    CloudSnow,
-    MapPin,
-    MoonStar,
-    RefreshCw,
-} from "lucide-react";
+import { MapPin, RefreshCw } from "lucide-react";
 import RealisticBackground from "../components/RealisticBackground";
-import clearDayAnim from "../../public/animations/clear-day.json";
-import cloudyAnim from "../../public/animations/cloudy.json";
-import partlyCloudyAnim from "../../public/animations/partly-cloudy-day.json";
-import rainAnim from "../../public/animations/rain.json";
-import snowAnim from "../../public/animations/snow.json";
-import thunderAnim from "../../public/animations/thunder.json";
+import { getWeatherIcon } from "../components/WeatherIcon";
 
 interface WeatherData {
     current: {
@@ -35,19 +19,6 @@ interface WeatherData {
     };
     hourly: Array<{ time: string; temp: number; code: number }>;
     daily: Array<{ date: string; temp_max: number; temp_min: number; condition: string; code: number }>;
-}
-
-type WeatherCategory = "clear" | "partly-cloudy" | "cloudy" | "fog" | "rain" | "snow" | "thunder";
-
-function getWeatherCategory(code: number): WeatherCategory {
-    if (code === 0) return "clear";
-    if (code === 1 || code === 2) return "partly-cloudy";
-    if (code === 3) return "cloudy";
-    if (code === 45 || code === 48) return "fog";
-    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
-    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
-    if (code >= 95 && code <= 99) return "thunder";
-    return "cloudy";
 }
 
 function getWeatherDesc(code: number): string {
@@ -139,51 +110,6 @@ export default function WeatherApp() {
         fetchWeather();
     }, []);
 
-    function getWeatherIcon(code: number, size: number = 64, isDay: boolean = true) {
-        const category = getWeatherCategory(code);
-        const iconProps = { size, strokeWidth: 1.75 };
-
-        if (!isDay) {
-            const nightIcon =
-                category === "clear" ? (
-                    <MoonStar {...iconProps} />
-                ) : category === "partly-cloudy" ? (
-                    <CloudMoon {...iconProps} />
-                ) : category === "cloudy" ? (
-                    <Cloud {...iconProps} />
-                ) : category === "fog" ? (
-                    <CloudFog {...iconProps} />
-                ) : category === "rain" ? (
-                    <CloudRain {...iconProps} />
-                ) : category === "snow" ? (
-                    <CloudSnow {...iconProps} />
-                ) : (
-                    <CloudLightning {...iconProps} />
-                );
-
-            return (
-                <div style={{ width: size, height: size }} className="flex items-center justify-center">
-                    {nightIcon}
-                </div>
-            );
-        }
-
-        const animation =
-            category === "clear"
-                ? clearDayAnim
-                : category === "partly-cloudy"
-                  ? partlyCloudyAnim
-                  : category === "cloudy" || category === "fog"
-                    ? cloudyAnim
-                    : category === "rain"
-                      ? rainAnim
-                      : category === "snow"
-                        ? snowAnim
-                        : thunderAnim;
-
-        return <Lottie animationData={animation} style={{ width: size, height: size }} loop />;
-    }
-
     function formatTime(timeStr: string): string {
         return new Date(timeStr).toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
     }
@@ -221,16 +147,16 @@ export default function WeatherApp() {
                     animate={{ opacity: 1, y: 0 }}
                     className={`md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left ${shadowClass}`}
                 >
-                    <div className="mb-6 transition-all duration-1000">{getWeatherIcon(currentCode, 180, isDay)}</div>
+                    <div className="mb-6 transition-all duration-1000">{getWeatherIcon(currentCode, 180, "", isDay)}</div>
                     <h1 className="text-[10rem] sm:text-[12rem] font-black leading-[0.8] tracking-tighter">
-                        {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}°
+                        {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;
                     </h1>
                     <p className="text-3xl sm:text-4xl font-black uppercase tracking-[0.1em] mt-8 opacity-90">
                         {selectedDayIndex === 0 ? weather.current.condition : weather.daily[selectedDayIndex].condition}
                     </p>
                     <div className={`mt-6 flex gap-6 text-sm font-bold uppercase tracking-widest ${subTextColor}`}>
-                        <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}°</span>
-                        <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}°</span>
+                        <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;</span>
+                        <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}&deg;</span>
                     </div>
                 </motion.div>
 
@@ -256,8 +182,8 @@ export default function WeatherApp() {
                             {weather.hourly.slice(selectedDayIndex * 24, (selectedDayIndex + 1) * 24).map((h, i) => (
                                 <div key={i} className="flex flex-col items-center gap-3 shrink-0">
                                     <span className={`text-[10px] font-bold ${subTextColor}`}>{formatTime(h.time)}</span>
-                                    <div className="transition-all duration-1000">{getWeatherIcon(h.code, 36, getIsDayForTime(h.time))}</div>
-                                    <span className="font-black text-lg">{Math.round(h.temp)}°</span>
+                                    <div className="transition-all duration-1000">{getWeatherIcon(h.code, 36, "", getIsDayForTime(h.time))}</div>
+                                    <span className="font-black text-lg">{Math.round(h.temp)}&deg;</span>
                                 </div>
                             ))}
                         </div>
@@ -273,10 +199,10 @@ export default function WeatherApp() {
                                     className={`flex items-center justify-between cursor-pointer py-3 px-4 rounded-2xl transition-all duration-300 ${selectedDayIndex === i ? "bg-black/10 font-black" : "hover:opacity-100 opacity-40"}`}
                                 >
                                     <span className="font-bold w-16 text-sm">{i === 0 ? "Today" : new Date(d.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" })}</span>
-                                    <div className="flex-1 flex justify-center transition-all duration-1000">{getWeatherIcon(d.code, 28, true)}</div>
+                                    <div className="flex-1 flex justify-center transition-all duration-1000">{getWeatherIcon(d.code, 28, "", true)}</div>
                                     <div className="font-black text-right w-20 flex gap-3 justify-end text-sm">
-                                        <span>{Math.round(d.temp_max)}°</span>
-                                        <span className="opacity-30">{Math.round(d.temp_min)}°</span>
+                                        <span>{Math.round(d.temp_max)}&deg;</span>
+                                        <span className="opacity-30">{Math.round(d.temp_min)}&deg;</span>
                                     </div>
                                 </div>
                             ))}
