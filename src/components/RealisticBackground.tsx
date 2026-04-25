@@ -9,20 +9,35 @@ interface Props {
 }
 
 export default function RealisticBackground({ code = 0, isDay = true }: Props) {
-  const gradients = useMemo(() => {
-    if (!isDay) return "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)";
-    if (code === 0) return "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)";
-    if (code <= 3) return "linear-gradient(135deg, #64748b 0%, #94a3b8 100%)";
-    if (code <= 65) return "linear-gradient(135deg, #334155 0%, #475569 100%)";
-    return "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)";
-  }, [code, isDay]);
+export default function RealisticBackground({ code = 0, isDay = true }: Props) {
+  const theme = useMemo((): WeatherTheme => {
+    if (code === 0) return "clear";
+    if (code >= 1 && code <= 3) return "cloudy";
+    if (code >= 45 && code <= 48) return "fog";
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+    if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "snow";
+    if (code >= 95) return "thunder";
+    return "clear";
+  }, [code]);
+
+  const background = useMemo(() => {
+    if (!isDay) return "linear-gradient(180deg, #0f172a 0%, #020617 100%)";
+    const dayThemes: Record<WeatherTheme, string> = {
+      clear: "linear-gradient(180deg, #38bdf8 0%, #f0f9ff 100%)",
+      cloudy: "linear-gradient(180deg, #94a3b8 0%, #f1f5f9 100%)",
+      fog: "linear-gradient(180deg, #cbd5e1 0%, #f8fafc 100%)",
+      rain: "linear-gradient(180deg, #475569 0%, #f1f5f9 100%)",
+      snow: "linear-gradient(180deg, #e2e8f0 0%, #ffffff 100%)",
+      thunder: "linear-gradient(180deg, #334155 0%, #f1f5f9 100%)",
+    };
+    return dayThemes[theme];
+  }, [theme, isDay]);
 
   return (
     <motion.div 
       className="fixed inset-0 -z-10"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, background: gradients }}
-      transition={{ duration: 1 }}
+      animate={{ background }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
     />
   );
 }
