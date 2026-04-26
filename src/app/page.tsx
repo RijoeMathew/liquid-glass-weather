@@ -159,6 +159,7 @@ export default function WeatherApp() {
     const [isSearchingLocations, setIsSearchingLocations] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLocatingCurrent, setIsLocatingCurrent] = useState(false);
+    const [timelineSidePadding, setTimelineSidePadding] = useState(0);
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
     const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
@@ -354,6 +355,44 @@ export default function WeatherApp() {
     }, [currentCode, isDay]);
 
     useEffect(() => {
+        if (!timelineScrollRef.current) {
+            return;
+        }
+
+        const container = timelineScrollRef.current;
+        const updateSidePadding = () => {
+            const sampleItem =
+                currentTimelineItemRef.current ??
+                container.querySelector<HTMLElement>("[data-timeline-card='true']");
+
+            if (!sampleItem) {
+                return;
+            }
+
+            setTimelineSidePadding(Math.max(0, (container.clientWidth - sampleItem.clientWidth) / 2));
+        };
+
+        updateSidePadding();
+
+        const resizeObserver = new ResizeObserver(updateSidePadding);
+        resizeObserver.observe(container);
+
+        const sampleItem =
+            currentTimelineItemRef.current ??
+            container.querySelector<HTMLElement>("[data-timeline-card='true']");
+        if (sampleItem) {
+            resizeObserver.observe(sampleItem);
+        }
+
+        window.addEventListener("resize", updateSidePadding);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener("resize", updateSidePadding);
+        };
+    }, [selectedDayIndex, weather?.current.time, weather?.hourly.length]);
+
+    useEffect(() => {
         if (selectedDayIndex !== 0 || !timelineScrollRef.current || !currentTimelineItemRef.current) {
             return;
         }
@@ -371,7 +410,7 @@ export default function WeatherApp() {
 
         const frameId = window.requestAnimationFrame(centerTimeline);
         return () => window.cancelAnimationFrame(frameId);
-    }, [selectedDayIndex, weather?.current.time, selectedLocation.id]);
+    }, [selectedDayIndex, weather?.current.time, selectedLocation.id, timelineSidePadding]);
 
     if (!weather) {
         return <div className="h-screen flex items-center justify-center font-black tracking-widest text-slate-400 uppercase">Syncing Atmosphere...</div>;
@@ -549,6 +588,7 @@ export default function WeatherApp() {
                                 </span>
                             </div>
                             <div ref={timelineScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                                <div aria-hidden="true" className="shrink-0" style={{ width: timelineSidePadding }} />
                                 {timelineItems.map((hour, index) => {
                                     const isCurrentHour = selectedDayIndex === 0 && hour.time.slice(0, 13) === weather.current.time.slice(0, 13);
 
@@ -556,6 +596,7 @@ export default function WeatherApp() {
                                         <div
                                             key={`${hour.time}-${index}`}
                                             ref={isCurrentHour ? currentTimelineItemRef : undefined}
+                                            data-timeline-card="true"
                                             className={`flex min-w-[92px] shrink-0 flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 ${themeTransitionClass} ${
                                                 isCurrentHour
                                                     ? `border-current ${mutedPanelClass}`
@@ -575,6 +616,7 @@ export default function WeatherApp() {
                                         </div>
                                     );
                                 })}
+                                <div aria-hidden="true" className="shrink-0" style={{ width: timelineSidePadding }} />
                             </div>
                         </div>
 

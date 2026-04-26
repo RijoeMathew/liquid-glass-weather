@@ -33,14 +33,14 @@ body::-webkit-scrollbar,
 
 .weather-shell {
   min-height: 100dvh;
-  padding-top: max(1rem, var(--safe-top));
+  padding-top: 0;
   padding-right: max(1rem, var(--safe-right));
   padding-bottom: max(1rem, var(--safe-bottom));
   padding-left: max(1rem, var(--safe-left));
 }
 
 .weather-frame {
-  min-height: calc(100dvh - max(1rem, var(--safe-top)) - max(1rem, var(--safe-bottom)));
+  min-height: calc(100dvh - max(1rem, var(--safe-bottom)));
 }
 
 @media (min-width: 640px) {
