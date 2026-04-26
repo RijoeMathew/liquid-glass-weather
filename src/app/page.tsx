@@ -400,9 +400,14 @@ export default function WeatherApp() {
         const container = timelineScrollRef.current;
         const currentItem = currentTimelineItemRef.current;
         const centerTimeline = () => {
-            const targetLeft = currentItem.offsetLeft - (container.clientWidth / 2) + (currentItem.clientWidth / 2);
-            container.scrollTo({
-                left: Math.max(0, targetLeft),
+            const containerRect = container.getBoundingClientRect();
+            const itemRect = currentItem.getBoundingClientRect();
+            const offsetToCenter =
+                (itemRect.left + (itemRect.width / 2)) -
+                (containerRect.left + (containerRect.width / 2));
+
+            container.scrollBy({
+                left: offsetToCenter,
                 behavior: hasCenteredTimelineRef.current ? "smooth" : "auto",
             });
             hasCenteredTimelineRef.current = true;
@@ -419,22 +424,45 @@ export default function WeatherApp() {
 
                 <div className="weather-frame relative z-10 flex items-center justify-center">
                     <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute inset-0 overflow-hidden"
+                    >
+                        <motion.div
+                            animate={{ x: ["-14%", "10%", "-14%"], y: [0, -12, 0] }}
+                            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute left-[-10%] top-[16%] h-36 w-72 rounded-full bg-white/20 blur-[42px]"
+                        />
+                        <motion.div
+                            animate={{ x: ["12%", "-10%", "12%"], y: [0, 14, 0] }}
+                            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+                            className="absolute right-[-12%] top-[28%] h-40 w-80 rounded-full bg-white/16 blur-[48px]"
+                        />
+                        <motion.div
+                            animate={{ x: ["-8%", "8%", "-8%"], y: [0, -10, 0] }}
+                            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+                            className="absolute left-[18%] bottom-[18%] h-28 w-60 rounded-full bg-sky-100/18 blur-[40px]"
+                        />
+                    </motion.div>
+
+                    <motion.div
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="flex max-w-sm flex-col items-center rounded-[2rem] border border-white/15 bg-slate-950/25 px-8 py-10 text-center backdrop-blur-xl"
+                        className="relative flex max-w-sm flex-col items-center px-8 text-center"
                     >
                         <motion.div
                             animate={{ y: [0, -10, 0], scale: [1, 1.03, 1] }}
                             transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                            className="mb-4"
+                            className="mb-6"
                         >
-                            {getWeatherIcon(2, 160, "", true)}
+                            {getWeatherIcon(2, 180, "", true)}
                         </motion.div>
-                        <p className="text-[0.72rem] font-black uppercase tracking-[0.34em] text-white/75">
+                        <p className="text-[0.72rem] font-black uppercase tracking-[0.34em] text-white/78">
                             Syncing Atmosphere
                         </p>
-                        <p className="mt-3 max-w-[18rem] text-sm font-bold tracking-[0.08em] text-white/88">
+                        <p className="mt-3 max-w-[18rem] text-sm font-bold tracking-[0.08em] text-white/92">
                             Pulling live conditions, forecast, and local sky details.
                         </p>
                     </motion.div>
@@ -614,7 +642,7 @@ export default function WeatherApp() {
                                     {selectedDayIndex === 0 ? "Timeline / Next 24H" : "Timeline / Day"}
                                 </span>
                             </div>
-                            <div ref={timelineScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                            <div ref={timelineScrollRef} className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-hide">
                                 <div aria-hidden="true" className="shrink-0" style={{ width: timelineSidePadding }} />
                                 {timelineItems.map((hour, index) => {
                                     const isCurrentHour = selectedDayIndex === 0 && hour.time.slice(0, 13) === weather.current.time.slice(0, 13);
@@ -624,7 +652,7 @@ export default function WeatherApp() {
                                             key={`${hour.time}-${index}`}
                                             ref={isCurrentHour ? currentTimelineItemRef : undefined}
                                             data-timeline-card="true"
-                                            className={`flex min-w-[92px] shrink-0 flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 ${themeTransitionClass} ${
+                                            className={`flex min-w-[92px] shrink-0 snap-center flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 ${themeTransitionClass} ${
                                                 isCurrentHour
                                                     ? `border-current ${mutedPanelClass}`
                                                     : `${borderClass} ${mutedPanelClass}`
