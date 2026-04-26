@@ -55,6 +55,14 @@ interface ReverseGeocodeResponse {
     };
 }
 
+interface BigDataCloudReverseResponse {
+    city?: string;
+    locality?: string;
+    localityName?: string;
+    countryName?: string;
+    principalSubdivision?: string;
+}
+
 const DEFAULT_LOCATION: LocationOption = {
     id: "toronto-ca-on",
     name: "Toronto",
@@ -167,6 +175,29 @@ function getThemeChromeBackground(code: number, isDay: boolean): string {
     return "linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%)";
 }
 
+function buildResolvedLocation(
+    latitude: number,
+    longitude: number,
+    details: {
+        name?: string;
+        admin1?: string;
+        country?: string;
+    }
+): LocationOption {
+    const resolvedName = details.name?.trim();
+    const resolvedAdmin1 = details.admin1?.trim();
+    const resolvedCountry = details.country?.trim();
+
+    return {
+        id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
+        name: resolvedName || resolvedAdmin1 || resolvedCountry || "Current Location",
+        latitude,
+        longitude,
+        admin1: resolvedAdmin1,
+        country: resolvedCountry,
+    };
+}
+
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -178,6 +209,7 @@ export default function WeatherApp() {
     const [isSearchingLocations, setIsSearchingLocations] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLocatingCurrent, setIsLocatingCurrent] = useState(false);
+    const [isInitializingLocation, setIsInitializingLocation] = useState(true);
     const [timelineSidePadding, setTimelineSidePadding] = useState(0);
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
@@ -228,27 +260,39 @@ export default function WeatherApp() {
 
     const resolveCurrentLocation = async (latitude: number, longitude: number): Promise<LocationOption> => {
         try {
+            const bigDataCloudRes = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            );
+            if (bigDataCloudRes.ok) {
+                const data: BigDataCloudReverseResponse = await bigDataCloudRes.json();
+                const resolvedLocation = buildResolvedLocation(latitude, longitude, {
+                    name: data.city ?? data.locality ?? data.localityName,
+                    admin1: data.principalSubdivision,
+                    country: data.countryName,
+                });
+
+                if (resolvedLocation.name !== "Current Location") {
+                    return resolvedLocation;
+                }
+            }
+        } catch (error) {
+            console.error("BigDataCloud reverse geocoding failed", error);
+        }
+
+        try {
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1&accept-language=en`
             );
             const data: ReverseGeocodeResponse = await res.json();
             const address = data.address;
-            return {
-                id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
-                name: address?.city ?? address?.town ?? address?.village ?? address?.municipality ?? address?.county ?? "Current Location",
-                latitude,
-                longitude,
+            return buildResolvedLocation(latitude, longitude, {
+                name: address?.city ?? address?.town ?? address?.village ?? address?.municipality ?? address?.county,
                 admin1: address?.state,
                 country: address?.country,
-            };
+            });
         } catch (error) {
             console.error("Reverse geocoding failed", error);
-            return {
-                id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
-                name: "Current Location",
-                latitude,
-                longitude,
-            };
+            return buildResolvedLocation(latitude, longitude, {});
         }
     };
 
@@ -285,11 +329,62 @@ export default function WeatherApp() {
     };
 
     useEffect(() => {
+        if (isInitializingLocation) {
+            return;
+        }
+
         fetchWeather(selectedLocation);
-    }, [selectedLocation]);
+    }, [selectedLocation, isInitializingLocation]);
 
     useEffect(() => {
-        useCurrentLocation();
+        let isMounted = true;
+
+        const initialiseLocation = async () => {
+            if (!navigator.geolocation) {
+                if (isMounted) {
+                    setIsInitializingLocation(false);
+                }
+                return;
+            }
+
+            setIsLocatingCurrent(true);
+            try {
+                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000,
+                    });
+                });
+
+                const currentLocation = await resolveCurrentLocation(
+                    position.coords.latitude,
+                    position.coords.longitude
+                );
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setSelectedDayIndex(0);
+                setLocationSource("current");
+                setSelectedLocation(currentLocation);
+                setLocationQuery(currentLocation.name);
+            } catch (error) {
+                console.error("Initial current location failed", error);
+            } finally {
+                if (isMounted) {
+                    setIsLocatingCurrent(false);
+                    setIsInitializingLocation(false);
+                }
+            }
+        };
+
+        initialiseLocation();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     useEffect(() => {
@@ -437,7 +532,7 @@ export default function WeatherApp() {
         return () => window.cancelAnimationFrame(frameId);
     }, [selectedDayIndex, weather?.current.time, selectedLocation.id, timelineSidePadding]);
 
-    if (!weather) {
+    if (isInitializingLocation || !weather) {
         return (
             <main className="weather-shell relative isolate overflow-hidden text-white selection:bg-blue-500/30">
                 <RealisticBackground code={2} isDay />
