@@ -7,6 +7,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Liquid Glass Weather",
   description: "A beautiful weather app with liquid background",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Liquid Glass Weather",
+  },
   icons: {
     icon: '/liquid-glass-weather/favicon.svg',
   },
