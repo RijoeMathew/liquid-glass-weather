@@ -147,6 +147,7 @@ export default function WeatherApp() {
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
     const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
+    const hasCenteredTimelineRef = useRef(false);
 
     const fetchWeather = async (location: LocationOption) => {
         setIsRefreshing(true);
@@ -314,17 +315,27 @@ export default function WeatherApp() {
     }, [isLocationMenuOpen, locationQuery]);
 
     useEffect(() => {
+        hasCenteredTimelineRef.current = false;
+    }, [selectedLocation.id]);
+
+    useEffect(() => {
         if (selectedDayIndex !== 0 || !timelineScrollRef.current || !currentTimelineItemRef.current) {
             return;
         }
 
         const container = timelineScrollRef.current;
         const currentItem = currentTimelineItemRef.current;
-        const targetLeft = currentItem.offsetLeft - (container.clientWidth / 2) + (currentItem.clientWidth / 2);
-        container.scrollTo({
-            left: Math.max(0, targetLeft),
-            behavior: "smooth",
-        });
+        const centerTimeline = () => {
+            const targetLeft = currentItem.offsetLeft - (container.clientWidth / 2) + (currentItem.clientWidth / 2);
+            container.scrollTo({
+                left: Math.max(0, targetLeft),
+                behavior: hasCenteredTimelineRef.current ? "smooth" : "auto",
+            });
+            hasCenteredTimelineRef.current = true;
+        };
+
+        const frameId = window.requestAnimationFrame(centerTimeline);
+        return () => window.cancelAnimationFrame(frameId);
     }, [selectedDayIndex, weather?.current.time, selectedLocation.id]);
 
     if (!weather) {
@@ -452,7 +463,7 @@ export default function WeatherApp() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="flex flex-col items-center justify-start gap-2 pt-0 pb-5 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
+                        className="flex flex-col items-center justify-start gap-2 pt-0 pb-8 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
                     >
                         <div className={`${themeTransitionClass} scale-110 sm:scale-[1.18] lg:scale-[1.28]`}>
                             {getWeatherIcon(currentCode, 150, "", isDay)}
@@ -472,10 +483,10 @@ export default function WeatherApp() {
                     </motion.section>
 
                     <section className="flex flex-col gap-6 lg:col-span-7">
-                        <div className={`grid grid-cols-3 gap-4 border-b pb-5 ${borderClass}`}>
+                        <div className={`mx-auto grid w-full max-w-[560px] grid-cols-3 gap-4 border-b pb-5 text-center lg:mx-0 lg:max-w-none ${borderClass}`}>
                             <div className="space-y-2">
                                 <span className={`text-[10px] font-black uppercase tracking-[0.22em] ${subTextColor}`}>Wind</span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center gap-2">
                                     <p className="text-2xl font-black sm:text-3xl">
                                         {Math.round(weather.current.windspeed)}
                                         <span className="ml-1 text-xs opacity-40 uppercase">km/h</span>
@@ -485,7 +496,7 @@ export default function WeatherApp() {
                             </div>
                             <div className="space-y-2">
                                 <span className={`text-[10px] font-black uppercase tracking-[0.22em] ${subTextColor}`}>UV Index</span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center gap-2">
                                     <p className="text-2xl font-black sm:text-3xl">
                                         {weather.current.uvIndex !== null ? weather.current.uvIndex.toFixed(1) : "--"}
                                     </p>
