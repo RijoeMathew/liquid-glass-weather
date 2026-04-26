@@ -413,7 +413,34 @@ export default function WeatherApp() {
     }, [selectedDayIndex, weather?.current.time, selectedLocation.id, timelineSidePadding]);
 
     if (!weather) {
-        return <div className="h-screen flex items-center justify-center font-black tracking-widest text-slate-400 uppercase">Syncing Atmosphere...</div>;
+        return (
+            <main className="weather-shell relative isolate overflow-hidden text-white selection:bg-blue-500/30">
+                <RealisticBackground code={2} isDay />
+
+                <div className="weather-frame relative z-10 flex items-center justify-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex max-w-sm flex-col items-center rounded-[2rem] border border-white/15 bg-slate-950/25 px-8 py-10 text-center backdrop-blur-xl"
+                    >
+                        <motion.div
+                            animate={{ y: [0, -10, 0], scale: [1, 1.03, 1] }}
+                            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                            className="mb-4"
+                        >
+                            {getWeatherIcon(2, 160, "", true)}
+                        </motion.div>
+                        <p className="text-[0.72rem] font-black uppercase tracking-[0.34em] text-white/75">
+                            Syncing Atmosphere
+                        </p>
+                        <p className="mt-3 max-w-[18rem] text-sm font-bold tracking-[0.08em] text-white/88">
+                            Pulling live conditions, forecast, and local sky details.
+                        </p>
+                    </motion.div>
+                </div>
+            </main>
+        );
     }
 
     const isLightBackground = isDay && (currentCode <= 3 || (currentCode >= 45 && currentCode <= 48));
