@@ -133,6 +133,21 @@ function getLocationLabel(location: LocationOption): string {
     return [location.name, location.admin1, location.country].filter(Boolean).join(", ");
 }
 
+function getThemeChromeColor(code: number, isDay: boolean): string {
+    if (!isDay) {
+        return "#1e293b";
+    }
+
+    if (code === 0) return "#38bdf8";
+    if (code >= 1 && code <= 3) return "#94a3b8";
+    if (code >= 45 && code <= 48) return "#cbd5e1";
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "#475569";
+    if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "#f8fafc";
+    if (code >= 95) return "#334155";
+
+    return "#38bdf8";
+}
+
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -318,6 +333,26 @@ export default function WeatherApp() {
         hasCenteredTimelineRef.current = false;
     }, [selectedLocation.id]);
 
+    const currentCode = weather
+        ? (selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex]?.code ?? weather.current.code)
+        : 0;
+    const isDay = weather ? (selectedDayIndex === 0 ? weather.current.is_day === 1 : true) : true;
+
+    useEffect(() => {
+        const chromeColor = getThemeChromeColor(currentCode, isDay);
+
+        document.documentElement.style.backgroundColor = chromeColor;
+        document.body.style.backgroundColor = chromeColor;
+
+        let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (!themeColorMeta) {
+            themeColorMeta = document.createElement("meta");
+            themeColorMeta.setAttribute("name", "theme-color");
+            document.head.appendChild(themeColorMeta);
+        }
+        themeColorMeta.setAttribute("content", chromeColor);
+    }, [currentCode, isDay]);
+
     useEffect(() => {
         if (selectedDayIndex !== 0 || !timelineScrollRef.current || !currentTimelineItemRef.current) {
             return;
@@ -342,8 +377,6 @@ export default function WeatherApp() {
         return <div className="h-screen flex items-center justify-center font-black tracking-widest text-slate-400 uppercase">Syncing Atmosphere...</div>;
     }
 
-    const currentCode = selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex].code;
-    const isDay = selectedDayIndex === 0 ? weather.current.is_day === 1 : true;
     const isLightBackground = isDay && (currentCode <= 3 || (currentCode >= 45 && currentCode <= 48));
     const textColor = isLightBackground ? "text-slate-950" : "text-white";
     const subTextColor = isLightBackground ? "text-slate-900/65" : "text-white/60";
