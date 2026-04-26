@@ -360,10 +360,10 @@ export default function WeatherApp() {
     const locationEyebrow = locationSource === "current" ? "Current Location" : "Location";
 
     return (
-        <main className={`min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6 transition-colors duration-700 ease-out ${textColor} selection:bg-blue-500/30`}>
+        <main className={`weather-shell transition-colors duration-700 ease-out ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
 
-            <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-[1600px] flex-col gap-3 sm:gap-4 lg:min-h-[calc(100dvh-3rem)] lg:gap-4">
+            <div className="weather-frame mx-auto flex max-w-[1600px] flex-col gap-3 sm:gap-4 lg:gap-4">
                 <header className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                     <div className="flex items-start gap-3 sm:gap-4">
                         <MapPin size={18} className="mt-6 shrink-0 sm:mt-6" />
