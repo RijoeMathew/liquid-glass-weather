@@ -69,10 +69,13 @@ function getWeatherAnimation(code: number, isDay: boolean): WeatherAnimation {
 
 export function getWeatherIcon(code: number, size: number = 24, className: string = "", isDay: boolean = true) {
     const animation = getWeatherAnimation(code, isDay);
+    const inset = Math.max(2, Math.round(size * 0.08));
 
     return (
-        <div style={{ width: size, height: size }} className={className}>
-            <Lottie animationData={animation} loop />
+        <div style={{ width: size, height: size, overflow: "visible" }} className={className}>
+            <div style={{ width: "100%", height: "100%", padding: inset }}>
+                <Lottie animationData={animation} loop style={{ width: "100%", height: "100%", overflow: "visible" }} />
+            </div>
         </div>
     );
 }
