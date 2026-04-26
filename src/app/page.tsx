@@ -641,16 +641,16 @@ export default function WeatherApp() {
         <main className={`weather-shell relative isolate overflow-hidden transition-colors duration-700 ease-out ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
 
-            <div className="weather-frame relative z-10 mx-auto flex max-w-[1600px] flex-col gap-3 sm:gap-4 lg:gap-4">
-                <header className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div className="weather-frame relative z-10 mx-auto flex max-w-[1600px] flex-col gap-2 sm:gap-4 lg:gap-4">
+                <header className="grid gap-2 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                     <div className="flex items-start gap-3 sm:gap-4">
-                        <MapPin size={18} className="mt-6 shrink-0 sm:mt-6" />
+                        <MapPin size={18} className="mt-4 shrink-0 sm:mt-6" />
                         <div className="min-w-0">
                             <div className={`text-[10px] font-black uppercase tracking-[0.32em] ${subTextColor}`}>{locationEyebrow}</div>
-                            <h1 className="mt-2 truncate text-[clamp(1.55rem,3vw,3.2rem)] font-black uppercase tracking-[0.08em] leading-none">
+                            <h1 className="mt-1 truncate text-[clamp(1.55rem,3vw,3.2rem)] font-black uppercase tracking-[0.08em] leading-none">
                                 {selectedLocation.name}
                             </h1>
-                            <p className={`mt-2 text-[11px] font-bold uppercase tracking-[0.18em] sm:text-xs ${subTextColor}`}>
+                            <p className={`mt-1 text-[11px] font-bold uppercase tracking-[0.18em] sm:mt-2 sm:text-xs ${subTextColor}`}>
                                 {selectedLocation.admin1 ?? selectedLocation.country ?? ""}
                             </p>
                         </div>
@@ -660,11 +660,11 @@ export default function WeatherApp() {
                         <div ref={locationPanelRef} className="relative min-w-0 flex-1 sm:w-[320px] sm:flex-none">
                             <button
                                 onClick={() => setIsLocationMenuOpen((open) => !open)}
-                                className={`flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-left backdrop-blur-md ${menuClass} ${themeTransitionClass}`}
+                                className={`flex h-12 w-full items-center justify-between rounded-2xl border px-4 text-left backdrop-blur-md sm:h-14 ${menuClass} ${themeTransitionClass}`}
                             >
                                 <div className="min-w-0">
                                     <div className={`text-[10px] font-black uppercase tracking-[0.22em] ${subTextColor}`}>Choose Location</div>
-                                    <div className="mt-1 truncate text-base font-black uppercase tracking-[0.08em]">
+                                    <div className="truncate text-base font-black uppercase tracking-[0.08em] sm:mt-1">
                                         {selectedLocation.name}
                                     </div>
                                 </div>
@@ -728,7 +728,7 @@ export default function WeatherApp() {
 
                         <button
                             onClick={() => fetchWeather(selectedLocation)}
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border backdrop-blur-md ${menuClass} ${themeTransitionClass}`}
+                            className={`flex h-12 w-12 items-center justify-center rounded-2xl border backdrop-blur-md sm:h-14 sm:w-14 ${menuClass} ${themeTransitionClass}`}
                             aria-label="Refresh weather"
                         >
                             <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
@@ -736,24 +736,24 @@ export default function WeatherApp() {
                     </div>
                 </header>
 
-                <div className="grid flex-1 grid-cols-1 gap-3 pt-4 sm:pt-0 sm:gap-4 lg:grid-cols-12 lg:gap-8">
+                <div className="grid flex-1 grid-cols-1 gap-3 pt-1 sm:pt-0 sm:gap-4 lg:grid-cols-12 lg:gap-8">
                     <motion.section
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="flex flex-col items-center justify-start gap-2 pt-0 pb-8 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
+                        className="flex flex-col items-center justify-start gap-1 pt-0 pb-5 text-center sm:gap-2 sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
                     >
-                        <div className={`${themeTransitionClass} scale-110 sm:scale-[1.18] lg:scale-[1.28]`}>
+                        <div className={`${themeTransitionClass} scale-[0.96] sm:scale-[1.18] lg:scale-[1.28]`}>
                             {getWeatherIcon(currentCode, 150, "", isDay)}
                         </div>
                         <div>
-                            <div className="text-[clamp(5.5rem,14vw,11rem)] font-black leading-[0.8] tracking-[-0.08em]">
+                            <div className="text-[clamp(4.75rem,13vw,11rem)] font-black leading-[0.78] tracking-[-0.08em] sm:text-[clamp(5.5rem,14vw,11rem)]">
                                 {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;
                             </div>
                             <p className="text-[clamp(1.2rem,2.3vw,2.1rem)] font-black uppercase tracking-[0.12em] opacity-90">
                                 {selectedDayIndex === 0 ? weather.current.condition : weather.daily[selectedDayIndex].condition}
                             </p>
-                            <div className={`mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-bold uppercase tracking-[0.16em] sm:text-base ${subTextColor}`}>
+                            <div className={`mt-2 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm font-bold uppercase tracking-[0.16em] sm:mt-3 sm:gap-y-2 sm:text-base ${subTextColor}`}>
                                 <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;</span>
                                 <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}&deg;</span>
                             </div>
