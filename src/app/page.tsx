@@ -446,7 +446,7 @@ export default function WeatherApp() {
                     </div>
                 </header>
 
-                <div className="grid flex-1 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:gap-8">
+                <div className="grid flex-1 grid-cols-1 gap-3 pt-4 sm:pt-0 sm:gap-4 lg:grid-cols-12 lg:gap-8">
                     <motion.section
                         key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
