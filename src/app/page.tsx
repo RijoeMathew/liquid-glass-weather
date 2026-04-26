@@ -335,7 +335,7 @@ export default function WeatherApp() {
         <main className={`min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
 
-            <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-[1600px] flex-col gap-4 sm:gap-5 lg:min-h-[calc(100dvh-3rem)] lg:gap-6">
+            <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-[1600px] flex-col gap-3 sm:gap-4 lg:min-h-[calc(100dvh-3rem)] lg:gap-4">
                 <header className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                     <div className="flex items-start gap-3 sm:gap-4">
                         <MapPin size={18} className="mt-6 shrink-0 sm:mt-6" />
@@ -430,12 +430,12 @@ export default function WeatherApp() {
                     </div>
                 </header>
 
-                <div className="grid flex-1 grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-12 lg:gap-8">
+                <div className="grid flex-1 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:gap-8">
                     <motion.section
                         key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-center gap-3 text-center lg:col-span-5 lg:self-center"
+                        className="flex flex-col items-center justify-start gap-2 pt-1 text-center lg:col-span-5 lg:self-start lg:pt-2"
                     >
                         <div className="transition-all duration-1000 scale-110 sm:scale-[1.18] lg:scale-[1.28]">
                             {getWeatherIcon(currentCode, 150, "", isDay)}
