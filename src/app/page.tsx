@@ -435,24 +435,19 @@ export default function WeatherApp() {
                         key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col gap-5 lg:col-span-5"
+                        className="flex flex-col items-center gap-4 text-center lg:col-span-5 lg:items-start lg:text-left"
                     >
-                        <div className="flex items-end gap-5 sm:gap-6">
-                            <div className="shrink-0 transition-all duration-1000">
-                                {getWeatherIcon(currentCode, 180, "", isDay)}
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-[clamp(5rem,12vw,10rem)] font-black leading-[0.82] tracking-[-0.08em]">
-                                    {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;
-                                </div>
-                            </div>
+                        <div className="transition-all duration-1000">
+                            {getWeatherIcon(currentCode, 150, "", isDay)}
                         </div>
-
                         <div>
+                            <div className="text-[clamp(4.75rem,11vw,9rem)] font-black leading-[0.82] tracking-[-0.08em]">
+                                {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;
+                            </div>
                             <p className="text-[clamp(1.1rem,2.2vw,2rem)] font-black uppercase tracking-[0.12em] opacity-90">
                                 {selectedDayIndex === 0 ? weather.current.condition : weather.daily[selectedDayIndex].condition}
                             </p>
-                            <div className={`mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold uppercase tracking-[0.16em] sm:text-base ${subTextColor}`}>
+                            <div className={`mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-bold uppercase tracking-[0.16em] sm:text-base lg:justify-start ${subTextColor}`}>
                                 <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;</span>
                                 <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}&deg;</span>
                             </div>
