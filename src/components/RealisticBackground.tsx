@@ -67,7 +67,7 @@ export default function RealisticBackground({ code = 0, isDay = true }: Props) {
   const themeKey = `${isDay ? "day" : "night"}-${theme}`;
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
       <AnimatePresence initial={false}>
         <motion.div
           key={themeKey}
