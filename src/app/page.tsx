@@ -332,26 +332,26 @@ export default function WeatherApp() {
     const locationEyebrow = locationSource === "current" ? "Current Location" : "Location";
 
     return (
-        <main className={`min-h-screen px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-6 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
+        <main className={`min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
 
-            <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-[1600px] flex-col gap-6 lg:min-h-[calc(100dvh-3rem)] lg:gap-6">
-                <header className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-[1600px] flex-col gap-4 sm:gap-5 lg:min-h-[calc(100dvh-3rem)] lg:gap-6">
+                <header className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                     <div className="flex items-start gap-3 sm:gap-4">
-                        <MapPin size={20} className="mt-8 shrink-0 sm:mt-7" />
+                        <MapPin size={18} className="mt-6 shrink-0 sm:mt-6" />
                         <div className="min-w-0">
                             <div className={`text-[10px] font-black uppercase tracking-[0.32em] ${subTextColor}`}>{locationEyebrow}</div>
-                            <h1 className="mt-3 truncate text-[clamp(1.9rem,4vw,4.25rem)] font-black uppercase tracking-[0.08em] leading-none">
+                            <h1 className="mt-2 truncate text-[clamp(1.55rem,3vw,3.2rem)] font-black uppercase tracking-[0.08em] leading-none">
                                 {selectedLocation.name}
                             </h1>
-                            <p className={`mt-3 text-xs font-bold uppercase tracking-[0.2em] sm:text-sm ${subTextColor}`}>
+                            <p className={`mt-2 text-[11px] font-bold uppercase tracking-[0.18em] sm:text-xs ${subTextColor}`}>
                                 {selectedLocation.admin1 ?? selectedLocation.country ?? ""}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 sm:flex-row lg:items-start lg:justify-end">
-                        <div ref={locationPanelRef} className="relative w-full sm:w-[320px]">
+                    <div className="flex items-start gap-3 lg:justify-end">
+                        <div ref={locationPanelRef} className="relative min-w-0 flex-1 sm:w-[320px] sm:flex-none">
                             <button
                                 onClick={() => setIsLocationMenuOpen((open) => !open)}
                                 className={`flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-left backdrop-blur-md ${menuClass}`}
@@ -430,24 +430,24 @@ export default function WeatherApp() {
                     </div>
                 </header>
 
-                <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                <div className="grid flex-1 grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-12 lg:gap-8">
                     <motion.section
                         key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center gap-4 text-center lg:col-span-5 lg:items-start lg:text-left"
+                        className="flex flex-col items-center justify-center gap-3 text-center lg:col-span-5 lg:self-center"
                     >
-                        <div className="transition-all duration-1000">
+                        <div className="transition-all duration-1000 scale-110 sm:scale-[1.18] lg:scale-[1.28]">
                             {getWeatherIcon(currentCode, 150, "", isDay)}
                         </div>
                         <div>
-                            <div className="text-[clamp(4.75rem,11vw,9rem)] font-black leading-[0.82] tracking-[-0.08em]">
+                            <div className="text-[clamp(5.5rem,14vw,11rem)] font-black leading-[0.8] tracking-[-0.08em]">
                                 {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;
                             </div>
-                            <p className="text-[clamp(1.1rem,2.2vw,2rem)] font-black uppercase tracking-[0.12em] opacity-90">
+                            <p className="text-[clamp(1.2rem,2.3vw,2.1rem)] font-black uppercase tracking-[0.12em] opacity-90">
                                 {selectedDayIndex === 0 ? weather.current.condition : weather.daily[selectedDayIndex].condition}
                             </p>
-                            <div className={`mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-bold uppercase tracking-[0.16em] sm:text-base lg:justify-start ${subTextColor}`}>
+                            <div className={`mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-bold uppercase tracking-[0.16em] sm:text-base ${subTextColor}`}>
                                 <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;</span>
                                 <span>Low {Math.round(weather.daily[selectedDayIndex].temp_min)}&deg;</span>
                             </div>
