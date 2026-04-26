@@ -404,7 +404,7 @@ export default function WeatherApp() {
                                         {isSearchingLocations && <LoaderCircle size={16} className="animate-spin shrink-0 opacity-60" />}
                                     </div>
 
-                                    <div className="mt-3 max-h-72 overflow-y-auto">
+                                    <div className="mt-3 max-h-72 overflow-y-auto scrollbar-hide">
                                         {locationOptions.length > 0 ? (
                                             <div className="space-y-2">
                                                 {locationOptions.map((option) => (
