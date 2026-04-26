@@ -198,6 +198,15 @@ function buildResolvedLocation(
     };
 }
 
+function buildCurrentLocationPlaceholder(latitude: number, longitude: number): LocationOption {
+    return {
+        id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
+        name: "Locating...",
+        latitude,
+        longitude,
+    };
+}
+
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -306,21 +315,32 @@ export default function WeatherApp() {
             const position = await new Promise<GeolocationPosition>((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
-                    timeout: 10000,
+                    timeout: 8000,
                     maximumAge: 300000,
                 });
             });
 
-            const currentLocation = await resolveCurrentLocation(
-                position.coords.latitude,
-                position.coords.longitude
-            );
+            const { latitude, longitude } = position.coords;
+            const pendingLocation = buildCurrentLocationPlaceholder(latitude, longitude);
 
             setSelectedDayIndex(0);
             setLocationSource("current");
-            setSelectedLocation(currentLocation);
-            setLocationQuery(currentLocation.name);
+            setSelectedLocation(pendingLocation);
+            setLocationQuery(pendingLocation.name);
             setIsLocationMenuOpen(false);
+
+            resolveCurrentLocation(latitude, longitude)
+                .then((resolvedLocation) => {
+                    setSelectedLocation((currentLocation) =>
+                        currentLocation.id === pendingLocation.id ? resolvedLocation : currentLocation
+                    );
+                    setLocationQuery((currentQuery) =>
+                        currentQuery === pendingLocation.name ? resolvedLocation.name : currentQuery
+                    );
+                })
+                .catch((error) => {
+                    console.error("Deferred current location resolution failed", error);
+                });
         } catch (error) {
             console.error("Current location failed", error);
         } finally {
@@ -334,7 +354,7 @@ export default function WeatherApp() {
         }
 
         fetchWeather(selectedLocation);
-    }, [selectedLocation, isInitializingLocation]);
+    }, [selectedLocation.id, isInitializingLocation]);
 
     useEffect(() => {
         let isMounted = true;
@@ -352,15 +372,13 @@ export default function WeatherApp() {
                 const position = await new Promise<GeolocationPosition>((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(resolve, reject, {
                         enableHighAccuracy: true,
-                        timeout: 10000,
+                        timeout: 8000,
                         maximumAge: 300000,
                     });
                 });
 
-                const currentLocation = await resolveCurrentLocation(
-                    position.coords.latitude,
-                    position.coords.longitude
-                );
+                const { latitude, longitude } = position.coords;
+                const pendingLocation = buildCurrentLocationPlaceholder(latitude, longitude);
 
                 if (!isMounted) {
                     return;
@@ -368,14 +386,32 @@ export default function WeatherApp() {
 
                 setSelectedDayIndex(0);
                 setLocationSource("current");
-                setSelectedLocation(currentLocation);
-                setLocationQuery(currentLocation.name);
+                setSelectedLocation(pendingLocation);
+                setLocationQuery(pendingLocation.name);
+                setIsInitializingLocation(false);
+
+                resolveCurrentLocation(latitude, longitude)
+                    .then((resolvedLocation) => {
+                        if (!isMounted) {
+                            return;
+                        }
+
+                        setSelectedLocation((currentLocation) =>
+                            currentLocation.id === pendingLocation.id ? resolvedLocation : currentLocation
+                        );
+                        setLocationQuery((currentQuery) =>
+                            currentQuery === pendingLocation.name ? resolvedLocation.name : currentQuery
+                        );
+                    })
+                    .catch((error) => {
+                        console.error("Deferred initial location resolution failed", error);
+                    });
             } catch (error) {
                 console.error("Initial current location failed", error);
             } finally {
                 if (isMounted) {
                     setIsLocatingCurrent(false);
-                    setIsInitializingLocation(false);
+                    setIsInitializingLocation((initialising) => initialising ? false : initialising);
                 }
             }
         };
