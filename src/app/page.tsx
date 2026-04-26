@@ -148,6 +148,25 @@ function getThemeChromeColor(code: number, isDay: boolean): string {
     return "#38bdf8";
 }
 
+function getThemeChromeBackground(code: number, isDay: boolean): string {
+    if (!isDay) {
+        return "linear-gradient(180deg, #1e293b 0%, #020617 100%)";
+    }
+
+    if (code === 0) return "linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%)";
+    if (code >= 1 && code <= 3) return "linear-gradient(180deg, #94a3b8 0%, #cbd5e1 100%)";
+    if (code >= 45 && code <= 48) return "linear-gradient(180deg, #cbd5e1 0%, #e2e8f0 100%)";
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        return "linear-gradient(180deg, #475569 0%, #94a3b8 100%)";
+    }
+    if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
+        return "linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)";
+    }
+    if (code >= 95) return "linear-gradient(180deg, #334155 0%, #475569 100%)";
+
+    return "linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%)";
+}
+
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -341,8 +360,15 @@ export default function WeatherApp() {
 
     useEffect(() => {
         const chromeColor = getThemeChromeColor(currentCode, isDay);
+        const chromeBackground = getThemeChromeBackground(currentCode, isDay);
 
+        document.documentElement.style.setProperty("--weather-chrome-color", chromeColor);
+        document.documentElement.style.setProperty("--weather-chrome-background", chromeBackground);
+        document.body.style.setProperty("--weather-chrome-color", chromeColor);
+        document.body.style.setProperty("--weather-chrome-background", chromeBackground);
+        document.documentElement.style.background = chromeBackground;
         document.documentElement.style.backgroundColor = chromeColor;
+        document.body.style.background = chromeBackground;
         document.body.style.backgroundColor = chromeColor;
 
         let themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -397,17 +423,11 @@ export default function WeatherApp() {
             return;
         }
 
-        const container = timelineScrollRef.current;
         const currentItem = currentTimelineItemRef.current;
         const centerTimeline = () => {
-            const containerRect = container.getBoundingClientRect();
-            const itemRect = currentItem.getBoundingClientRect();
-            const offsetToCenter =
-                (itemRect.left + (itemRect.width / 2)) -
-                (containerRect.left + (containerRect.width / 2));
-
-            container.scrollBy({
-                left: offsetToCenter,
+            currentItem.scrollIntoView({
+                block: "nearest",
+                inline: "center",
                 behavior: hasCenteredTimelineRef.current ? "smooth" : "auto",
             });
             hasCenteredTimelineRef.current = true;
