@@ -74,7 +74,13 @@ export function getWeatherIcon(code: number, size: number = 24, className: strin
     return (
         <div style={{ width: size, height: size, overflow: "visible" }} className={className}>
             <div style={{ width: "100%", height: "100%", padding: inset }}>
-                <Lottie animationData={animation} loop style={{ width: "100%", height: "100%", overflow: "visible" }} />
+                <Lottie
+                    animationData={animation}
+                    loop
+                    renderer={"canvas" as any}
+                    rendererSettings={{ preserveAspectRatio: "xMidYMid meet", clearCanvas: true } as any}
+                    style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }}
+                />
             </div>
         </div>
     );
