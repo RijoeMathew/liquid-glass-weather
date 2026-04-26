@@ -341,6 +341,7 @@ export default function WeatherApp() {
     const menuClass = isLightBackground ? "bg-white/50 border-black/10" : "bg-slate-900/80 border-white/10";
     const inputClass = isLightBackground ? "bg-white/60 border-black/10 placeholder:text-slate-900/40" : "bg-black/20 border-white/10 placeholder:text-white/35";
     const hoverRowClass = isLightBackground ? "hover:bg-white/20" : "hover:bg-white/[0.05]";
+    const themeTransitionClass = "transition-[background-color,border-color,color,opacity,transform] duration-700 ease-out";
     const timelineStartIndex = selectedDayIndex * 24;
     const timelineItems = weather.hourly.slice(timelineStartIndex, timelineStartIndex + 24);
     const showSunscreen = (weather.current.uvIndex ?? 0) >= 3;
@@ -348,7 +349,7 @@ export default function WeatherApp() {
     const locationEyebrow = locationSource === "current" ? "Current Location" : "Location";
 
     return (
-        <main className={`min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6 transition-colors duration-1000 ${textColor} selection:bg-blue-500/30`}>
+        <main className={`min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6 transition-colors duration-700 ease-out ${textColor} selection:bg-blue-500/30`}>
             <RealisticBackground code={currentCode} isDay={isDay} />
 
             <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-[1600px] flex-col gap-3 sm:gap-4 lg:min-h-[calc(100dvh-3rem)] lg:gap-4">
@@ -370,7 +371,7 @@ export default function WeatherApp() {
                         <div ref={locationPanelRef} className="relative min-w-0 flex-1 sm:w-[320px] sm:flex-none">
                             <button
                                 onClick={() => setIsLocationMenuOpen((open) => !open)}
-                                className={`flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-left backdrop-blur-md ${menuClass}`}
+                                className={`flex h-14 w-full items-center justify-between rounded-2xl border px-4 text-left backdrop-blur-md ${menuClass} ${themeTransitionClass}`}
                             >
                                 <div className="min-w-0">
                                     <div className={`text-[10px] font-black uppercase tracking-[0.22em] ${subTextColor}`}>Choose Location</div>
@@ -385,7 +386,7 @@ export default function WeatherApp() {
                                 <div className={`absolute right-0 top-[calc(100%+0.75rem)] z-20 w-full rounded-[1.5rem] border p-3 backdrop-blur-xl ${menuClass}`}>
                                     <button
                                         onClick={useCurrentLocation}
-                                        className={`mb-3 flex h-12 w-full items-center justify-between rounded-2xl border px-4 text-left ${inputClass}`}
+                                        className={`mb-3 flex h-12 w-full items-center justify-between rounded-2xl border px-4 text-left ${inputClass} ${themeTransitionClass}`}
                                     >
                                         <div className="flex items-center gap-3">
                                             {isLocatingCurrent ? <LoaderCircle size={16} className="animate-spin" /> : <LocateFixed size={16} />}
@@ -393,7 +394,7 @@ export default function WeatherApp() {
                                         </div>
                                     </button>
 
-                                    <div className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${inputClass}`}>
+                                    <div className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${inputClass} ${themeTransitionClass}`}>
                                         <Search size={16} className="shrink-0 opacity-60" />
                                         <input
                                             value={locationQuery}
@@ -417,7 +418,7 @@ export default function WeatherApp() {
                                                             setLocationQuery(option.name);
                                                             setIsLocationMenuOpen(false);
                                                         }}
-                                                        className={`block w-full rounded-2xl border px-4 py-3 text-left transition-colors ${inputClass}`}
+                                                        className={`block w-full rounded-2xl border px-4 py-3 text-left ${inputClass} ${themeTransitionClass}`}
                                                     >
                                                         <div className="text-sm font-black uppercase tracking-[0.12em]">{option.name}</div>
                                                         <div className={`mt-1 text-[11px] font-bold uppercase tracking-[0.16em] ${subTextColor}`}>
@@ -438,7 +439,7 @@ export default function WeatherApp() {
 
                         <button
                             onClick={() => fetchWeather(selectedLocation)}
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border backdrop-blur-md ${menuClass}`}
+                            className={`flex h-14 w-14 items-center justify-center rounded-2xl border backdrop-blur-md ${menuClass} ${themeTransitionClass}`}
                             aria-label="Refresh weather"
                         >
                             <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
@@ -448,12 +449,12 @@ export default function WeatherApp() {
 
                 <div className="grid flex-1 grid-cols-1 gap-3 pt-4 sm:pt-0 sm:gap-4 lg:grid-cols-12 lg:gap-8">
                     <motion.section
-                        key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                         className="flex flex-col items-center justify-start gap-2 pt-0 pb-5 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
                     >
-                        <div className="transition-all duration-1000 scale-110 sm:scale-[1.18] lg:scale-[1.28]">
+                        <div className={`${themeTransitionClass} scale-110 sm:scale-[1.18] lg:scale-[1.28]`}>
                             {getWeatherIcon(currentCode, 150, "", isDay)}
                         </div>
                         <div>
@@ -511,7 +512,7 @@ export default function WeatherApp() {
                                         <div
                                             key={`${hour.time}-${index}`}
                                             ref={isCurrentHour ? currentTimelineItemRef : undefined}
-                                            className={`flex min-w-[92px] shrink-0 flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 transition-colors ${
+                                            className={`flex min-w-[92px] shrink-0 flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 ${themeTransitionClass} ${
                                                 isCurrentHour
                                                     ? `border-current ${mutedPanelClass}`
                                                     : `${borderClass} ${mutedPanelClass}`
@@ -540,7 +541,7 @@ export default function WeatherApp() {
                                     <button
                                         key={day.date}
                                         onClick={() => setSelectedDayIndex(index)}
-                                        className={`flex items-center gap-3 rounded-[1.35rem] border px-4 py-3 text-left transition-colors ${
+                                        className={`flex items-center gap-3 rounded-[1.35rem] border px-4 py-3 text-left ${themeTransitionClass} ${
                                             selectedDayIndex === index
                                                 ? `border-current ${mutedPanelClass}`
                                                 : `${borderClass} bg-transparent ${hoverRowClass}`
