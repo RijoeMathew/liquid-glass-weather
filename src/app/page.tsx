@@ -145,6 +145,8 @@ export default function WeatherApp() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLocatingCurrent, setIsLocatingCurrent] = useState(false);
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
+    const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+    const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
 
     const fetchWeather = async (location: LocationOption) => {
         setIsRefreshing(true);
@@ -311,6 +313,20 @@ export default function WeatherApp() {
         };
     }, [isLocationMenuOpen, locationQuery]);
 
+    useEffect(() => {
+        if (selectedDayIndex !== 0 || !timelineScrollRef.current || !currentTimelineItemRef.current) {
+            return;
+        }
+
+        const container = timelineScrollRef.current;
+        const currentItem = currentTimelineItemRef.current;
+        const targetLeft = currentItem.offsetLeft - (container.clientWidth / 2) + (currentItem.clientWidth / 2);
+        container.scrollTo({
+            left: Math.max(0, targetLeft),
+            behavior: "smooth",
+        });
+    }, [selectedDayIndex, weather?.current.time, selectedLocation.id]);
+
     if (!weather) {
         return <div className="h-screen flex items-center justify-center font-black tracking-widest text-slate-400 uppercase">Syncing Atmosphere...</div>;
     }
@@ -325,8 +341,8 @@ export default function WeatherApp() {
     const menuClass = isLightBackground ? "bg-white/50 border-black/10" : "bg-slate-900/80 border-white/10";
     const inputClass = isLightBackground ? "bg-white/60 border-black/10 placeholder:text-slate-900/40" : "bg-black/20 border-white/10 placeholder:text-white/35";
     const hoverRowClass = isLightBackground ? "hover:bg-white/20" : "hover:bg-white/[0.05]";
-    const hourlyStartIndex = selectedDayIndex === 0 ? getTimelineStartIndex(weather.hourly, weather.current.time) : selectedDayIndex * 24;
-    const timelineItems = weather.hourly.slice(hourlyStartIndex, hourlyStartIndex + 24);
+    const timelineStartIndex = selectedDayIndex * 24;
+    const timelineItems = weather.hourly.slice(timelineStartIndex, timelineStartIndex + 24);
     const showSunscreen = (weather.current.uvIndex ?? 0) >= 3;
     const showWindbreaker = weather.current.windspeed >= 20;
     const locationEyebrow = locationSource === "current" ? "Current Location" : "Location";
@@ -435,7 +451,7 @@ export default function WeatherApp() {
                         key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-start gap-2 pt-1 text-center lg:col-span-5 lg:self-start lg:pt-2"
+                        className="flex flex-col items-center justify-start gap-2 pt-1 pb-4 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
                     >
                         <div className="transition-all duration-1000 scale-110 sm:scale-[1.18] lg:scale-[1.28]">
                             {getWeatherIcon(currentCode, 150, "", isDay)}
@@ -487,13 +503,14 @@ export default function WeatherApp() {
                                     {selectedDayIndex === 0 ? "Timeline / Next 24H" : "Timeline / Day"}
                                 </span>
                             </div>
-                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                            <div ref={timelineScrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                                 {timelineItems.map((hour, index) => {
                                     const isCurrentHour = selectedDayIndex === 0 && hour.time.slice(0, 13) === weather.current.time.slice(0, 13);
 
                                     return (
                                         <div
                                             key={`${hour.time}-${index}`}
+                                            ref={isCurrentHour ? currentTimelineItemRef : undefined}
                                             className={`flex min-w-[92px] shrink-0 flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 transition-colors ${
                                                 isCurrentHour
                                                     ? `border-current ${mutedPanelClass}`
