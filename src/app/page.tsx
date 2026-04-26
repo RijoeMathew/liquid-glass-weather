@@ -451,7 +451,7 @@ export default function WeatherApp() {
                         key={`${selectedLocation.id}-${selectedDayIndex}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-start gap-2 pt-1 pb-4 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
+                        className="flex flex-col items-center justify-start gap-2 pt-0 pb-5 text-center sm:pb-5 lg:col-span-5 lg:self-start lg:pt-2 lg:pb-0"
                     >
                         <div className="transition-all duration-1000 scale-110 sm:scale-[1.18] lg:scale-[1.28]">
                             {getWeatherIcon(currentCode, 150, "", isDay)}
