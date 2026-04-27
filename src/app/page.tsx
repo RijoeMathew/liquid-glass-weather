@@ -223,6 +223,7 @@ export default function WeatherApp() {
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
     const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
+    const firstTimelineItemRef = useRef<HTMLDivElement | null>(null);
     const hasCenteredTimelineRef = useRef(false);
 
     const fetchWeather = async (location: LocationOption) => {
@@ -550,18 +551,24 @@ export default function WeatherApp() {
     }, [selectedDayIndex, weather?.current.time, weather?.hourly.length]);
 
     useEffect(() => {
-        if (selectedDayIndex !== 0 || !timelineScrollRef.current || !currentTimelineItemRef.current) {
+        if (!timelineScrollRef.current) {
             return;
         }
 
-        const currentItem = currentTimelineItemRef.current;
+        const targetItem = selectedDayIndex === 0 ? currentTimelineItemRef.current : firstTimelineItemRef.current;
+        if (!targetItem) {
+            return;
+        }
+
         const centerTimeline = () => {
-            currentItem.scrollIntoView({
+            targetItem.scrollIntoView({
                 block: "nearest",
                 inline: "center",
-                behavior: hasCenteredTimelineRef.current ? "smooth" : "auto",
+                behavior: selectedDayIndex === 0 && hasCenteredTimelineRef.current ? "smooth" : "auto",
             });
-            hasCenteredTimelineRef.current = true;
+            if (selectedDayIndex === 0) {
+                hasCenteredTimelineRef.current = true;
+            }
         };
 
         const frameId = window.requestAnimationFrame(centerTimeline);
@@ -801,7 +808,13 @@ export default function WeatherApp() {
                                     return (
                                         <div
                                             key={`${hour.time}-${index}`}
-                                            ref={isCurrentHour ? currentTimelineItemRef : undefined}
+                                            ref={
+                                                isCurrentHour
+                                                    ? currentTimelineItemRef
+                                                    : index === 0
+                                                        ? firstTimelineItemRef
+                                                        : undefined
+                                            }
                                             data-timeline-card="true"
                                             className={`flex min-w-[92px] shrink-0 snap-center flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 ${themeTransitionClass} ${
                                                 isCurrentHour
