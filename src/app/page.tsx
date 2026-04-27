@@ -68,6 +68,11 @@ const DEFAULT_LOCATION: LocationOption = {
 
 const CURRENT_LOCATION_CACHE_KEY = "weather-current-location-cache";
 const INITIAL_FALLBACK_DELAY_MS = 900;
+const GEOLOCATION_OPTIONS: PositionOptions = {
+    enableHighAccuracy: true,
+    timeout: 8000,
+    maximumAge: 300000,
+};
 
 function getWeatherDesc(code: number): string {
     switch (code) {
@@ -238,6 +243,7 @@ export default function WeatherApp() {
     const locationSourceRef = useRef(locationSource);
     const currentLocationLookupRef = useRef(0);
     const [currentLocationFallback, setCurrentLocationFallback] = useState<LocationOption>(DEFAULT_LOCATION);
+    const currentLocationFallbackRef = useRef(currentLocationFallback);
 
     useEffect(() => {
         selectedLocationRef.current = selectedLocation;
@@ -246,6 +252,10 @@ export default function WeatherApp() {
     useEffect(() => {
         locationSourceRef.current = locationSource;
     }, [locationSource]);
+
+    useEffect(() => {
+        currentLocationFallbackRef.current = currentLocationFallback;
+    }, [currentLocationFallback]);
 
     useEffect(() => {
         try {
@@ -338,6 +348,16 @@ export default function WeatherApp() {
         }
     };
 
+    const requestBrowserGeolocation = async () => {
+        if (!navigator.geolocation) {
+            return null;
+        }
+
+        return new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, GEOLOCATION_OPTIONS);
+        });
+    };
+
     const fetchWeather = async (
         location: LocationOption,
         source: "current" | "manual",
@@ -403,29 +423,32 @@ export default function WeatherApp() {
         }
     };
 
-    const useCurrentLocation = async () => {
-        if (!navigator.geolocation) {
-            return;
-        }
+    const activateCurrentLocation = async (options?: { closeMenu?: boolean }) => {
+        try {
+            const position = await requestBrowserGeolocation();
+            if (!position) {
+                return false;
+            }
 
+            const { latitude, longitude } = position.coords;
+            const currentLocation = buildCurrentLocation(latitude, longitude, currentLocationFallbackRef.current);
+
+            void fetchWeather(currentLocation, "current");
+            if (options?.closeMenu) {
+                setIsLocationMenuOpen(false);
+            }
+            return true;
+        } catch (error) {
+            console.error("Current location failed", error);
+        }
+        return false;
+    };
+
+    const useCurrentLocation = async () => {
         setIsLocatingCurrent(true);
         try {
             locationSearchInputRef.current?.blur();
-            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
-                    timeout: 8000,
-                    maximumAge: 300000,
-                });
-            });
-
-            const { latitude, longitude } = position.coords;
-            const currentLocation = buildCurrentLocation(latitude, longitude, currentLocationFallback);
-
-            setIsLocationMenuOpen(false);
-            void fetchWeather(currentLocation, "current");
-        } catch (error) {
-            console.error("Current location failed", error);
+            await activateCurrentLocation({ closeMenu: true });
         } finally {
             setIsLocatingCurrent(false);
         }
@@ -458,23 +481,15 @@ export default function WeatherApp() {
 
             setIsLocatingCurrent(true);
             try {
-                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: true,
-                        timeout: 8000,
-                        maximumAge: 300000,
-                    });
-                });
-
-                const { latitude, longitude } = position.coords;
-                const currentLocation = buildCurrentLocation(latitude, longitude, currentLocationFallback);
-
+                window.clearTimeout(fallbackTimerId);
+                const resolved = await activateCurrentLocation();
                 if (!isMounted) {
                     return;
                 }
 
-                window.clearTimeout(fallbackTimerId);
-                void fetchWeather(currentLocation, "current");
+                if (!resolved) {
+                    startFallbackWeather();
+                }
                 setIsInitializingLocation(false);
             } catch (error) {
                 console.error("Initial current location failed", error);
