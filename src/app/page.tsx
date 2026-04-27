@@ -81,6 +81,7 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
     timeout: 8000,
     maximumAge: 300000,
 };
+const HIGH_UV_RECOMMENDATION_THRESHOLD = 6;
 
 function getWeatherDesc(code: number): string {
     switch (code) {
@@ -684,7 +685,7 @@ export default function WeatherApp() {
     const activeHumidity = activeTimelineItem?.humidity ?? weather?.current.humidity ?? 0;
     const activeUvIndex = activeTimelineItem?.uvIndex ?? weather?.current.uvIndex ?? null;
     const activePrecipitation = activeTimelineItem?.precipitation ?? 0;
-    const showSunscreen = activeUvIndex !== null && activeUvIndex >= 8;
+    const showSunscreen = activeUvIndex !== null && activeUvIndex >= HIGH_UV_RECOMMENDATION_THRESHOLD;
     const showWindbreaker = activeWind >= 25;
     const showUmbrella = activePrecipitation >= 3;
     const recommendationItems = [
