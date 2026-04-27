@@ -81,7 +81,7 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
     timeout: 8000,
     maximumAge: 300000,
 };
-const HIGH_UV_RECOMMENDATION_THRESHOLD = 6;
+const HIGH_UV_RECOMMENDATION_THRESHOLD = 3;
 
 function getWeatherDesc(code: number): string {
     switch (code) {
