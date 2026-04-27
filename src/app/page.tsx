@@ -43,6 +43,20 @@ interface GeocodingResponse {
     }>;
 }
 
+interface ReverseGeocodingResponse {
+    address?: {
+        city?: string;
+        town?: string;
+        village?: string;
+        municipality?: string;
+        hamlet?: string;
+        suburb?: string;
+        county?: string;
+        state?: string;
+        country?: string;
+    };
+}
+
 const DEFAULT_LOCATION: LocationOption = {
     id: "toronto-ca-on",
     name: "Toronto",
@@ -51,6 +65,8 @@ const DEFAULT_LOCATION: LocationOption = {
     country: "Canada",
     admin1: "Ontario",
 };
+
+const CURRENT_LOCATION_CACHE_KEY = "weather-current-location-cache";
 
 function getWeatherDesc(code: number): string {
     switch (code) {
@@ -170,6 +186,23 @@ function buildCurrentLocation(
     };
 }
 
+function getReverseLocationName(address?: ReverseGeocodingResponse["address"]): string | null {
+    if (!address) {
+        return null;
+    }
+
+    return (
+        address.city ??
+        address.town ??
+        address.village ??
+        address.municipality ??
+        address.hamlet ??
+        address.suburb ??
+        address.county ??
+        null
+    );
+}
+
 function LoadingBlock({ className }: { className: string }) {
     return (
         <motion.div
@@ -200,6 +233,109 @@ export default function WeatherApp() {
     const hasCenteredTimelineRef = useRef(false);
     const weatherRequestRef = useRef(0);
     const hasWeatherLoadedRef = useRef(false);
+    const selectedLocationRef = useRef(selectedLocation);
+    const locationSourceRef = useRef(locationSource);
+    const currentLocationLookupRef = useRef(0);
+    const [currentLocationFallback, setCurrentLocationFallback] = useState<LocationOption>(DEFAULT_LOCATION);
+
+    useEffect(() => {
+        selectedLocationRef.current = selectedLocation;
+    }, [selectedLocation]);
+
+    useEffect(() => {
+        locationSourceRef.current = locationSource;
+    }, [locationSource]);
+
+    useEffect(() => {
+        try {
+            const cachedValue = window.localStorage.getItem(CURRENT_LOCATION_CACHE_KEY);
+            if (!cachedValue) {
+                return;
+            }
+
+            const parsed = JSON.parse(cachedValue) as Partial<LocationOption>;
+            if (
+                typeof parsed.name === "string" &&
+                typeof parsed.latitude === "number" &&
+                typeof parsed.longitude === "number"
+            ) {
+                setCurrentLocationFallback({
+                    id: typeof parsed.id === "string" ? parsed.id : "current-cached",
+                    name: parsed.name,
+                    latitude: parsed.latitude,
+                    longitude: parsed.longitude,
+                    country: parsed.country,
+                    admin1: parsed.admin1,
+                });
+            }
+        } catch (error) {
+            console.error("Current location cache read failed", error);
+        }
+    }, []);
+
+    const hydrateCurrentLocationDetails = async (location: LocationOption) => {
+        const lookupId = currentLocationLookupRef.current + 1;
+        currentLocationLookupRef.current = lookupId;
+
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=10&lat=${location.latitude}&lon=${location.longitude}`,
+                {
+                    signal: controller.signal,
+                    headers: {
+                        "Accept-Language": "en",
+                    },
+                }
+            );
+
+            if (!res.ok) {
+                return;
+            }
+
+            const data = (await res.json()) as ReverseGeocodingResponse;
+            const resolvedName = getReverseLocationName(data.address);
+            if (!resolvedName) {
+                return;
+            }
+
+            const resolvedLocation: LocationOption = {
+                id: location.id,
+                name: resolvedName,
+                latitude: location.latitude,
+                longitude: location.longitude,
+                admin1: data.address?.state ?? location.admin1,
+                country: data.address?.country ?? location.country,
+            };
+
+            if (lookupId !== currentLocationLookupRef.current) {
+                return;
+            }
+
+            setCurrentLocationFallback(resolvedLocation);
+            try {
+                window.localStorage.setItem(CURRENT_LOCATION_CACHE_KEY, JSON.stringify(resolvedLocation));
+            } catch (error) {
+                console.error("Current location cache write failed", error);
+            }
+
+            if (
+                selectedLocationRef.current.id === location.id &&
+                locationSourceRef.current === "current"
+            ) {
+                setSelectedLocation(resolvedLocation);
+                setLocationQuery(resolvedLocation.name);
+            }
+        } catch (error) {
+            if (!(error instanceof DOMException && error.name === "AbortError")) {
+                console.error("Current location reverse lookup failed", error);
+            }
+        } finally {
+            window.clearTimeout(timeoutId);
+        }
+    };
 
     const fetchWeather = async (
         location: LocationOption,
@@ -254,6 +390,9 @@ export default function WeatherApp() {
             setSelectedLocation(location);
             setLocationSource(source);
             setLocationQuery(location.name);
+            if (source === "current") {
+                void hydrateCurrentLocationDetails(location);
+            }
         } catch (e) {
             console.error("Fetch failed", e);
         } finally {
@@ -279,7 +418,7 @@ export default function WeatherApp() {
             });
 
             const { latitude, longitude } = position.coords;
-            const currentLocation = buildCurrentLocation(latitude, longitude, selectedLocation);
+            const currentLocation = buildCurrentLocation(latitude, longitude, currentLocationFallback);
 
             setIsLocationMenuOpen(false);
             void fetchWeather(currentLocation, "current");
@@ -316,7 +455,7 @@ export default function WeatherApp() {
                 });
 
                 const { latitude, longitude } = position.coords;
-                const currentLocation = buildCurrentLocation(latitude, longitude, DEFAULT_LOCATION);
+                const currentLocation = buildCurrentLocation(latitude, longitude, currentLocationFallback);
 
                 if (!isMounted) {
                     return;
