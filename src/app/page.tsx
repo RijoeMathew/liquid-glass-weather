@@ -43,18 +43,6 @@ interface GeocodingResponse {
     }>;
 }
 
-interface ReverseGeocodeResponse {
-    address?: {
-        city?: string;
-        town?: string;
-        village?: string;
-        municipality?: string;
-        county?: string;
-        state?: string;
-        country?: string;
-    };
-}
-
 const DEFAULT_LOCATION: LocationOption = {
     id: "toronto-ca-on",
     name: "Toronto",
@@ -167,33 +155,10 @@ function getThemeChromeBackground(code: number, isDay: boolean): string {
     return "linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%)";
 }
 
-function buildResolvedLocation(
-    latitude: number,
-    longitude: number,
-    details: {
-        name?: string;
-        admin1?: string;
-        country?: string;
-    }
-): LocationOption {
-    const resolvedName = details.name?.trim();
-    const resolvedAdmin1 = details.admin1?.trim();
-    const resolvedCountry = details.country?.trim();
-
+function buildCurrentLocation(latitude: number, longitude: number): LocationOption {
     return {
         id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
-        name: resolvedName || resolvedAdmin1 || resolvedCountry || "Current Location",
-        latitude,
-        longitude,
-        admin1: resolvedAdmin1,
-        country: resolvedCountry,
-    };
-}
-
-function buildCurrentLocationPlaceholder(latitude: number, longitude: number): LocationOption {
-    return {
-        id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
-        name: "Locating...",
+        name: "Current Location",
         latitude,
         longitude,
     };
@@ -260,24 +225,6 @@ export default function WeatherApp() {
         }
     };
 
-    const resolveCurrentLocation = async (latitude: number, longitude: number): Promise<LocationOption> => {
-        try {
-            const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1&accept-language=en`
-            );
-            const data: ReverseGeocodeResponse = await res.json();
-            const address = data.address;
-            return buildResolvedLocation(latitude, longitude, {
-                name: address?.city ?? address?.town ?? address?.village ?? address?.municipality ?? address?.county,
-                admin1: address?.state,
-                country: address?.country,
-            });
-        } catch (error) {
-            console.error("Reverse geocoding failed", error);
-            return buildResolvedLocation(latitude, longitude, {});
-        }
-    };
-
     const useCurrentLocation = async () => {
         if (!navigator.geolocation) {
             return;
@@ -294,26 +241,13 @@ export default function WeatherApp() {
             });
 
             const { latitude, longitude } = position.coords;
-            const pendingLocation = buildCurrentLocationPlaceholder(latitude, longitude);
+            const currentLocation = buildCurrentLocation(latitude, longitude);
 
             setSelectedDayIndex(0);
             setLocationSource("current");
-            setSelectedLocation(pendingLocation);
-            setLocationQuery(pendingLocation.name);
+            setSelectedLocation(currentLocation);
+            setLocationQuery(currentLocation.name);
             setIsLocationMenuOpen(false);
-
-            resolveCurrentLocation(latitude, longitude)
-                .then((resolvedLocation) => {
-                    setSelectedLocation((currentLocation) =>
-                        currentLocation.id === pendingLocation.id ? resolvedLocation : currentLocation
-                    );
-                    setLocationQuery((currentQuery) =>
-                        currentQuery === pendingLocation.name ? resolvedLocation.name : currentQuery
-                    );
-                })
-                .catch((error) => {
-                    console.error("Deferred current location resolution failed", error);
-                });
         } catch (error) {
             console.error("Current location failed", error);
         } finally {
@@ -351,7 +285,7 @@ export default function WeatherApp() {
                 });
 
                 const { latitude, longitude } = position.coords;
-                const pendingLocation = buildCurrentLocationPlaceholder(latitude, longitude);
+                const currentLocation = buildCurrentLocation(latitude, longitude);
 
                 if (!isMounted) {
                     return;
@@ -359,26 +293,9 @@ export default function WeatherApp() {
 
                 setSelectedDayIndex(0);
                 setLocationSource("current");
-                setSelectedLocation(pendingLocation);
-                setLocationQuery(pendingLocation.name);
+                setSelectedLocation(currentLocation);
+                setLocationQuery(currentLocation.name);
                 setIsInitializingLocation(false);
-
-                resolveCurrentLocation(latitude, longitude)
-                    .then((resolvedLocation) => {
-                        if (!isMounted) {
-                            return;
-                        }
-
-                        setSelectedLocation((currentLocation) =>
-                            currentLocation.id === pendingLocation.id ? resolvedLocation : currentLocation
-                        );
-                        setLocationQuery((currentQuery) =>
-                            currentQuery === pendingLocation.name ? resolvedLocation.name : currentQuery
-                        );
-                    })
-                    .catch((error) => {
-                        console.error("Deferred initial location resolution failed", error);
-                    });
             } catch (error) {
                 console.error("Initial current location failed", error);
             } finally {
