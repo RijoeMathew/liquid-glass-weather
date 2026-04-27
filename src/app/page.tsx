@@ -402,10 +402,12 @@ export default function WeatherApp() {
         hasCenteredTimelineRef.current = false;
     }, [selectedLocation.id]);
 
+    const fallbackHour = new Date().getHours();
+    const fallbackIsDay = fallbackHour >= 6 && fallbackHour < 18;
     const currentCode = weather
         ? (selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex]?.code ?? weather.current.code)
-        : 0;
-    const isDay = weather ? (selectedDayIndex === 0 ? weather.current.is_day === 1 : true) : true;
+        : fallbackIsDay ? 2 : 1;
+    const isDay = weather ? (selectedDayIndex === 0 ? weather.current.is_day === 1 : true) : fallbackIsDay;
     const isContentLoading = !weather;
     const showSectionLoading = isRefreshing && !isContentLoading;
 
