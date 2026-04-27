@@ -223,7 +223,7 @@ export default function WeatherApp() {
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
     const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
-    const firstTimelineItemRef = useRef<HTMLDivElement | null>(null);
+    const selectedTimelineItemRef = useRef<HTMLDivElement | null>(null);
     const hasCenteredTimelineRef = useRef(false);
 
     const fetchWeather = async (location: LocationOption) => {
@@ -555,7 +555,7 @@ export default function WeatherApp() {
             return;
         }
 
-        const targetItem = selectedDayIndex === 0 ? currentTimelineItemRef.current : firstTimelineItemRef.current;
+        const targetItem = selectedDayIndex === 0 ? currentTimelineItemRef.current : selectedTimelineItemRef.current;
         if (!targetItem) {
             return;
         }
@@ -640,6 +640,7 @@ export default function WeatherApp() {
     const themeTransitionClass = "transition-[background-color,border-color,color,opacity,transform] duration-700 ease-out";
     const timelineStartIndex = selectedDayIndex * 24;
     const timelineItems = weather.hourly.slice(timelineStartIndex, timelineStartIndex + 24);
+    const currentHourOfDay = getHourFromTime(weather.current.time);
     const showSunscreen = (weather.current.uvIndex ?? 0) >= 3;
     const showWindbreaker = weather.current.windspeed >= 20;
     const locationEyebrow = locationSource === "current" ? "Current Location" : "Location";
@@ -804,6 +805,7 @@ export default function WeatherApp() {
                                 <div aria-hidden="true" className="shrink-0" style={{ width: timelineSidePadding }} />
                                 {timelineItems.map((hour, index) => {
                                     const isCurrentHour = selectedDayIndex === 0 && hour.time.slice(0, 13) === weather.current.time.slice(0, 13);
+                                    const isSelectedDayHour = selectedDayIndex !== 0 && getHourFromTime(hour.time) === currentHourOfDay;
 
                                     return (
                                         <div
@@ -811,8 +813,8 @@ export default function WeatherApp() {
                                             ref={
                                                 isCurrentHour
                                                     ? currentTimelineItemRef
-                                                    : index === 0
-                                                        ? firstTimelineItemRef
+                                                    : isSelectedDayHour
+                                                        ? selectedTimelineItemRef
                                                         : undefined
                                             }
                                             data-timeline-card="true"
@@ -822,11 +824,15 @@ export default function WeatherApp() {
                                                     : `${borderClass} ${mutedPanelClass}`
                                             }`}
                                         >
-                                            {isCurrentHour && (
-                                                <span className="rounded-full border border-current px-2 py-1 text-[9px] font-black uppercase tracking-[0.22em]">
-                                                    Now
-                                                </span>
-                                            )}
+                                            <span
+                                                className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.22em] ${
+                                                    isCurrentHour
+                                                        ? "border-current opacity-100"
+                                                        : "border-transparent opacity-0"
+                                                }`}
+                                            >
+                                                Now
+                                            </span>
                                             <span className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isCurrentHour ? "opacity-100" : subTextColor}`}>
                                                 {formatTime(hour.time)}
                                             </span>
