@@ -227,6 +227,7 @@ export default function WeatherApp() {
     const [isInitializingLocation, setIsInitializingLocation] = useState(true);
     const [timelineSidePadding, setTimelineSidePadding] = useState(0);
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
+    const locationSearchInputRef = useRef<HTMLInputElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
     const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
     const selectedTimelineItemRef = useRef<HTMLDivElement | null>(null);
@@ -409,6 +410,7 @@ export default function WeatherApp() {
 
         setIsLocatingCurrent(true);
         try {
+            locationSearchInputRef.current?.blur();
             const position = await new Promise<GeolocationPosition>((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
@@ -711,10 +713,11 @@ export default function WeatherApp() {
                                     <div className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${inputClass} ${themeTransitionClass}`}>
                                         <Search size={16} className="shrink-0 opacity-60" />
                                         <input
+                                            ref={locationSearchInputRef}
                                             value={locationQuery}
                                             onChange={(event) => setLocationQuery(event.target.value)}
                                             placeholder="Search city, state, or country"
-                                            className="w-full bg-transparent text-sm font-bold uppercase tracking-[0.12em] outline-none"
+                                            className="w-full bg-transparent text-base font-bold uppercase tracking-[0.12em] outline-none sm:text-sm"
                                         />
                                         {isSearchingLocations && <LoaderCircle size={16} className="animate-spin shrink-0 opacity-60" />}
                                     </div>
@@ -726,6 +729,7 @@ export default function WeatherApp() {
                                                     <button
                                                         key={option.id}
                                                         onClick={() => {
+                                                            locationSearchInputRef.current?.blur();
                                                             setLocationQuery(option.name);
                                                             setIsLocationMenuOpen(false);
                                                             void fetchWeather(option, "manual");
