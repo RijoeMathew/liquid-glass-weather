@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, LoaderCircle, LocateFixed, MapPin, RefreshCw, Search, Shield, Sun } from "lucide-react";
+import { ChevronDown, LoaderCircle, LocateFixed, MapPin, RefreshCw, Search, Shield, Sun, Umbrella } from "lucide-react";
 import RealisticBackground from "../components/RealisticBackground";
 import { getWeatherIcon } from "../components/WeatherIcon";
 
@@ -19,7 +19,15 @@ interface WeatherData {
         pressure: number;
         uvIndex: number | null;
     };
-    hourly: Array<{ time: string; temp: number; code: number }>;
+    hourly: Array<{
+        time: string;
+        temp: number;
+        code: number;
+        windspeed: number;
+        humidity: number;
+        uvIndex: number | null;
+        precipitation: number;
+    }>;
     daily: Array<{ date: string; temp_max: number; temp_min: number; condition: string; code: number }>;
 }
 
@@ -222,6 +230,7 @@ function LoadingBlock({ className }: { className: string }) {
 export default function WeatherApp() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+    const [selectedTimelineTime, setSelectedTimelineTime] = useState<string | null>(null);
     const [selectedLocation, setSelectedLocation] = useState<LocationOption>(DEFAULT_LOCATION);
     const [locationSource, setLocationSource] = useState<"current" | "manual">("manual");
     const [locationQuery, setLocationQuery] = useState(DEFAULT_LOCATION.name);
@@ -234,8 +243,8 @@ export default function WeatherApp() {
     const locationPanelRef = useRef<HTMLDivElement | null>(null);
     const locationSearchInputRef = useRef<HTMLInputElement | null>(null);
     const timelineScrollRef = useRef<HTMLDivElement | null>(null);
-    const currentTimelineItemRef = useRef<HTMLDivElement | null>(null);
-    const selectedTimelineItemRef = useRef<HTMLDivElement | null>(null);
+    const currentTimelineItemRef = useRef<HTMLButtonElement | null>(null);
+    const selectedTimelineItemRef = useRef<HTMLButtonElement | null>(null);
     const hasCenteredTimelineRef = useRef(false);
     const weatherRequestRef = useRef(0);
     const hasWeatherLoadedRef = useRef(false);
@@ -368,7 +377,7 @@ export default function WeatherApp() {
         setIsRefreshing(true);
         try {
             const res = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code,is_day,wind_speed_10m,relative_humidity_2m,visibility,surface_pressure,uv_index&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
+                `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code,is_day,wind_speed_10m,relative_humidity_2m,visibility,surface_pressure,uv_index&hourly=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,uv_index,precipitation&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
             );
             const data = await res.json();
             const isLatestRequest = requestId === weatherRequestRef.current;
@@ -395,6 +404,10 @@ export default function WeatherApp() {
                     time,
                     temp: data.hourly.temperature_2m[i],
                     code: data.hourly.weather_code[i],
+                    windspeed: data.hourly.wind_speed_10m[i],
+                    humidity: data.hourly.relative_humidity_2m[i],
+                    uvIndex: typeof data.hourly.uv_index[i] === "number" ? data.hourly.uv_index[i] : null,
+                    precipitation: data.hourly.precipitation[i],
                 })),
                 daily: data.daily.time
                     .map((date: string, i: number) => ({
@@ -572,14 +585,37 @@ export default function WeatherApp() {
         hasCenteredTimelineRef.current = false;
     }, [selectedLocation.id]);
 
+    const timelineStartIndex = weather ? selectedDayIndex * 24 : 0;
+    const timelineItems = weather ? weather.hourly.slice(timelineStartIndex, timelineStartIndex + 24) : [];
+
+    useEffect(() => {
+        if (!timelineItems.length) {
+            setSelectedTimelineTime(null);
+            return;
+        }
+
+        const defaultTimelineItem =
+            selectedDayIndex === 0
+                ? timelineItems.find((hour) => hour.time.slice(0, 13) === weather?.current.time.slice(0, 13)) ?? timelineItems[0]
+                : timelineItems.find((hour) => getHourFromTime(hour.time) === getHourFromTime(weather?.current.time ?? "")) ?? timelineItems[0];
+
+        setSelectedTimelineTime(defaultTimelineItem.time);
+    }, [selectedDayIndex, selectedLocation.id, weather?.current.time, weather?.hourly.length]);
+
     const fallbackHour = new Date().getHours();
     const fallbackIsDay = fallbackHour >= 6 && fallbackHour < 18;
-    const currentCode = weather
-        ? (selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex]?.code ?? weather.current.code)
-        : fallbackIsDay ? 2 : 1;
-    const isDay = weather ? (selectedDayIndex === 0 ? weather.current.is_day === 1 : true) : fallbackIsDay;
     const isContentLoading = !weather;
     const showSectionLoading = isRefreshing && !isContentLoading;
+    const activeTimelineItem =
+        timelineItems.find((hour) => hour.time === selectedTimelineTime) ??
+        timelineItems[0] ??
+        null;
+    const activeHourOfDay = activeTimelineItem ? getHourFromTime(activeTimelineItem.time) : fallbackHour;
+    const activeTimelineIsDay = activeHourOfDay >= 6 && activeHourOfDay < 18;
+    const currentCode = activeTimelineItem?.code ?? (weather
+        ? (selectedDayIndex === 0 ? weather.current.code : weather.daily[selectedDayIndex]?.code ?? weather.current.code)
+        : fallbackIsDay ? 2 : 1);
+    const isDay = activeTimelineItem ? activeTimelineIsDay : weather ? (selectedDayIndex === 0 ? weather.current.is_day === 1 : true) : fallbackIsDay;
 
     useEffect(() => {
         if (!weather) {
@@ -612,7 +648,7 @@ export default function WeatherApp() {
             return;
         }
 
-        const targetItem = selectedDayIndex === 0 ? currentTimelineItemRef.current : selectedTimelineItemRef.current;
+        const targetItem = selectedTimelineItemRef.current ?? currentTimelineItemRef.current;
         if (!targetItem) {
             return;
         }
@@ -630,7 +666,7 @@ export default function WeatherApp() {
 
         const frameId = window.requestAnimationFrame(centerTimeline);
         return () => window.cancelAnimationFrame(frameId);
-    }, [selectedDayIndex, weather?.current.time, selectedLocation.id]);
+    }, [selectedDayIndex, selectedTimelineTime, weather?.current.time, selectedLocation.id]);
 
     const isLightBackground = isDay && (currentCode <= 3 || (currentCode >= 45 && currentCode <= 48));
     const textColor = isLightBackground ? "text-slate-950" : "text-white";
@@ -641,11 +677,26 @@ export default function WeatherApp() {
     const inputClass = isLightBackground ? "bg-white/60 border-black/10 placeholder:text-slate-900/40" : "bg-black/20 border-white/10 placeholder:text-white/35";
     const hoverRowClass = isLightBackground ? "hover:bg-white/20" : "hover:bg-white/[0.05]";
     const themeTransitionClass = "transition-[background-color,border-color,color,opacity,transform] duration-700 ease-out";
-    const timelineStartIndex = weather ? selectedDayIndex * 24 : 0;
-    const timelineItems = weather ? weather.hourly.slice(timelineStartIndex, timelineStartIndex + 24) : [];
     const currentHourOfDay = weather ? getHourFromTime(weather.current.time) : 12;
-    const showSunscreen = weather ? (weather.current.uvIndex ?? 0) >= 3 : false;
-    const showWindbreaker = weather ? weather.current.windspeed >= 20 : false;
+    const activeCondition = activeTimelineItem ? getWeatherDesc(activeTimelineItem.code) : weather?.current.condition ?? "Cloudy";
+    const activeTemp = activeTimelineItem?.temp ?? weather?.current.temp ?? 0;
+    const activeWind = activeTimelineItem?.windspeed ?? weather?.current.windspeed ?? 0;
+    const activeHumidity = activeTimelineItem?.humidity ?? weather?.current.humidity ?? 0;
+    const activeUvIndex = activeTimelineItem?.uvIndex ?? weather?.current.uvIndex ?? null;
+    const activePrecipitation = activeTimelineItem?.precipitation ?? 0;
+    const showSunscreen = activeUvIndex !== null && activeUvIndex >= 8;
+    const showWindbreaker = activeWind >= 25;
+    const showUmbrella = activePrecipitation >= 3;
+    const recommendationItems = [
+        showSunscreen ? { key: "sunscreen", label: "Sunscreen", icon: Sun } : null,
+        showWindbreaker ? { key: "windbreaker", label: "Windbreaker", icon: Shield } : null,
+        showUmbrella ? { key: "umbrella", label: "Umbrella", icon: Umbrella } : null,
+    ].filter(Boolean) as Array<{ key: string; label: string; icon: typeof Sun }>;
+    const activeTimelineLabel = activeTimelineItem
+        ? selectedDayIndex === 0 && activeTimelineItem.time.slice(0, 13) === weather?.current.time.slice(0, 13)
+            ? "Now"
+            : formatTime(activeTimelineItem.time)
+        : "Now";
     const locationEyebrow = "Location";
     const timelineSkeletonItems = Array.from({ length: 6 }, (_, index) => index);
     const dailySkeletonItems = Array.from({ length: 7 }, (_, index) => index);
@@ -781,10 +832,13 @@ export default function WeatherApp() {
                             ) : (
                                 <>
                                     <div className="text-[clamp(4.75rem,13vw,11rem)] font-black leading-[0.78] tracking-[-0.08em] sm:text-[clamp(5.5rem,14vw,11rem)]">
-                                        {selectedDayIndex === 0 ? Math.round(weather.current.temp) : Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;
+                                        {Math.round(activeTemp)}&deg;
                                     </div>
                                     <p className="text-[clamp(1.2rem,2.3vw,2.1rem)] font-black uppercase tracking-[0.12em] opacity-90">
-                                        {selectedDayIndex === 0 ? weather.current.condition : weather.daily[selectedDayIndex].condition}
+                                        {activeCondition}
+                                    </p>
+                                    <p className={`mt-2 text-[11px] font-black uppercase tracking-[0.22em] ${subTextColor}`}>
+                                        {activeTimelineLabel} Forecast
                                     </p>
                                     <div className={`mt-2 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm font-bold uppercase tracking-[0.16em] sm:mt-3 sm:gap-y-2 sm:text-base ${subTextColor}`}>
                                         <span>High {Math.round(weather.daily[selectedDayIndex].temp_max)}&deg;</span>
@@ -805,7 +859,7 @@ export default function WeatherApp() {
                                     ) : (
                                         <>
                                             <p className="text-2xl font-black sm:text-3xl">
-                                                {Math.round(weather.current.windspeed)}
+                                                {Math.round(activeWind)}
                                                 <span className="ml-1 text-xs opacity-40 uppercase">km/h</span>
                                             </p>
                                             {showWindbreaker && <Shield size={16} className="opacity-80" aria-label="Windbreaker recommended" />}
@@ -821,7 +875,7 @@ export default function WeatherApp() {
                                     ) : (
                                         <>
                                             <p className="text-2xl font-black sm:text-3xl">
-                                                {weather.current.uvIndex !== null ? weather.current.uvIndex.toFixed(1) : "--"}
+                                                {activeUvIndex !== null ? activeUvIndex.toFixed(1) : "--"}
                                             </p>
                                             {showSunscreen && <Sun size={16} className="opacity-80" aria-label="Sunscreen recommended" />}
                                         </>
@@ -835,10 +889,27 @@ export default function WeatherApp() {
                                         <LoadingBlock className="h-10 w-20" />
                                     </div>
                                 ) : (
-                                    <p className="text-2xl font-black sm:text-3xl">{weather.current.humidity}<span className="ml-1 text-xs opacity-40 uppercase">%</span></p>
+                                    <p className="text-2xl font-black sm:text-3xl">{Math.round(activeHumidity)}<span className="ml-1 text-xs opacity-40 uppercase">%</span></p>
                                 )}
                             </div>
                         </div>
+
+                        {!isContentLoading && recommendationItems.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {recommendationItems.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <div
+                                            key={item.key}
+                                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] ${borderClass} ${mutedPanelClass} ${themeTransitionClass}`}
+                                        >
+                                            <Icon size={14} className="opacity-85" />
+                                            <span>{item.label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         <div className={`border-b pb-6 ${borderClass} ${showSectionLoading ? "animate-pulse" : ""}`}>
                             <div className="mb-4 flex items-center justify-between gap-4">
@@ -862,21 +933,23 @@ export default function WeatherApp() {
                                     ))
                                     : timelineItems.map((hour, index) => {
                                         const isCurrentHour = selectedDayIndex === 0 && hour.time.slice(0, 13) === weather.current.time.slice(0, 13);
-                                        const isSelectedDayHour = selectedDayIndex !== 0 && getHourFromTime(hour.time) === currentHourOfDay;
+                                        const isSelectedDayHour = hour.time === selectedTimelineTime;
 
                                         return (
-                                            <div
+                                            <button
+                                                type="button"
                                                 key={`${hour.time}-${index}`}
                                                 ref={
-                                                    isCurrentHour
-                                                        ? currentTimelineItemRef
-                                                        : isSelectedDayHour
-                                                            ? selectedTimelineItemRef
+                                                    isSelectedDayHour
+                                                        ? selectedTimelineItemRef
+                                                        : isCurrentHour
+                                                            ? currentTimelineItemRef
                                                             : undefined
                                                 }
+                                                onClick={() => setSelectedTimelineTime(hour.time)}
                                                 data-timeline-card="true"
-                                                className={`flex min-w-[92px] shrink-0 snap-center flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 ${themeTransitionClass} ${
-                                                    isCurrentHour
+                                                className={`flex min-w-[92px] shrink-0 snap-center flex-col items-center gap-3 rounded-[1.35rem] border px-3 py-4 text-center ${themeTransitionClass} ${
+                                                    isSelectedDayHour
                                                         ? `border-current ${mutedPanelClass}`
                                                         : `${borderClass} ${mutedPanelClass}`
                                                 }`}
@@ -890,12 +963,12 @@ export default function WeatherApp() {
                                                 >
                                                     Now
                                                 </span>
-                                                <span className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isCurrentHour ? "opacity-100" : subTextColor}`}>
+                                                <span className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isSelectedDayHour ? "opacity-100" : subTextColor}`}>
                                                     {formatTime(hour.time)}
                                                 </span>
                                                 {getWeatherIcon(hour.code, 44, "", getHourFromTime(hour.time) >= 6 && getHourFromTime(hour.time) < 18)}
                                                 <span className="text-xl font-black sm:text-2xl">{Math.round(hour.temp)}&deg;</span>
-                                            </div>
+                                            </button>
                                         );
                                     })}
                             </div>
@@ -923,7 +996,10 @@ export default function WeatherApp() {
                                     : weather.daily.map((day, index) => (
                                         <button
                                             key={day.date}
-                                            onClick={() => setSelectedDayIndex(index)}
+                                            onClick={() => {
+                                                setSelectedDayIndex(index);
+                                                setSelectedTimelineTime(null);
+                                            }}
                                             className={`flex items-center gap-3 rounded-[1.35rem] border px-4 py-3 text-left ${themeTransitionClass} ${
                                                 selectedDayIndex === index
                                                     ? `border-current ${mutedPanelClass}`
