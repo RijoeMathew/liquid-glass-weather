@@ -155,12 +155,18 @@ function getThemeChromeBackground(code: number, isDay: boolean): string {
     return "linear-gradient(180deg, #38bdf8 0%, #bae6fd 100%)";
 }
 
-function buildCurrentLocation(latitude: number, longitude: number): LocationOption {
+function buildCurrentLocation(
+    latitude: number,
+    longitude: number,
+    fallbackLocation: LocationOption = DEFAULT_LOCATION
+): LocationOption {
     return {
         id: `current-${latitude.toFixed(4)}-${longitude.toFixed(4)}`,
-        name: "Current Location",
+        name: fallbackLocation.name,
         latitude,
         longitude,
+        country: fallbackLocation.country,
+        admin1: fallbackLocation.admin1,
     };
 }
 
@@ -273,7 +279,7 @@ export default function WeatherApp() {
             });
 
             const { latitude, longitude } = position.coords;
-            const currentLocation = buildCurrentLocation(latitude, longitude);
+            const currentLocation = buildCurrentLocation(latitude, longitude, selectedLocation);
 
             setIsLocationMenuOpen(false);
             void fetchWeather(currentLocation, "current");
@@ -310,7 +316,7 @@ export default function WeatherApp() {
                 });
 
                 const { latitude, longitude } = position.coords;
-                const currentLocation = buildCurrentLocation(latitude, longitude);
+                const currentLocation = buildCurrentLocation(latitude, longitude, DEFAULT_LOCATION);
 
                 if (!isMounted) {
                     return;
@@ -506,7 +512,7 @@ export default function WeatherApp() {
     const currentHourOfDay = weather ? getHourFromTime(weather.current.time) : 12;
     const showSunscreen = weather ? (weather.current.uvIndex ?? 0) >= 3 : false;
     const showWindbreaker = weather ? weather.current.windspeed >= 20 : false;
-    const locationEyebrow = locationSource === "current" ? "Current Location" : "Location";
+    const locationEyebrow = "Location";
     const timelineSkeletonItems = Array.from({ length: 6 }, (_, index) => index);
     const dailySkeletonItems = Array.from({ length: 7 }, (_, index) => index);
 
