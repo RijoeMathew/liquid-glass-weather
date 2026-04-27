@@ -55,14 +55,6 @@ interface ReverseGeocodeResponse {
     };
 }
 
-interface BigDataCloudReverseResponse {
-    city?: string;
-    locality?: string;
-    localityName?: string;
-    countryName?: string;
-    principalSubdivision?: string;
-}
-
 const DEFAULT_LOCATION: LocationOption = {
     id: "toronto-ca-on",
     name: "Toronto",
@@ -269,26 +261,6 @@ export default function WeatherApp() {
     };
 
     const resolveCurrentLocation = async (latitude: number, longitude: number): Promise<LocationOption> => {
-        try {
-            const bigDataCloudRes = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            if (bigDataCloudRes.ok) {
-                const data: BigDataCloudReverseResponse = await bigDataCloudRes.json();
-                const resolvedLocation = buildResolvedLocation(latitude, longitude, {
-                    name: data.city ?? data.locality ?? data.localityName,
-                    admin1: data.principalSubdivision,
-                    country: data.countryName,
-                });
-
-                if (resolvedLocation.name !== "Current Location") {
-                    return resolvedLocation;
-                }
-            }
-        } catch (error) {
-            console.error("BigDataCloud reverse geocoding failed", error);
-        }
-
         try {
             const res = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1&accept-language=en`
