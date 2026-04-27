@@ -67,6 +67,7 @@ const DEFAULT_LOCATION: LocationOption = {
 };
 
 const CURRENT_LOCATION_CACHE_KEY = "weather-current-location-cache";
+const INITIAL_FALLBACK_DELAY_MS = 900;
 
 function getWeatherDesc(code: number): string {
     switch (code) {
@@ -431,15 +432,25 @@ export default function WeatherApp() {
     };
 
     useEffect(() => {
-        void fetchWeather(DEFAULT_LOCATION, "manual", { allowFallbackApply: true });
-    }, []);
-
-    useEffect(() => {
         let isMounted = true;
+        let hasStartedFallback = false;
+
+        const startFallbackWeather = () => {
+            if (!isMounted || hasStartedFallback || hasWeatherLoadedRef.current) {
+                return;
+            }
+
+            hasStartedFallback = true;
+            void fetchWeather(DEFAULT_LOCATION, "manual", { allowFallbackApply: true });
+        };
+
+        const fallbackTimerId = window.setTimeout(startFallbackWeather, INITIAL_FALLBACK_DELAY_MS);
 
         const initialiseLocation = async () => {
             if (!navigator.geolocation) {
                 if (isMounted) {
+                    window.clearTimeout(fallbackTimerId);
+                    startFallbackWeather();
                     setIsInitializingLocation(false);
                 }
                 return;
@@ -462,10 +473,13 @@ export default function WeatherApp() {
                     return;
                 }
 
+                window.clearTimeout(fallbackTimerId);
                 void fetchWeather(currentLocation, "current");
                 setIsInitializingLocation(false);
             } catch (error) {
                 console.error("Initial current location failed", error);
+                window.clearTimeout(fallbackTimerId);
+                startFallbackWeather();
             } finally {
                 if (isMounted) {
                     setIsLocatingCurrent(false);
@@ -478,6 +492,7 @@ export default function WeatherApp() {
 
         return () => {
             isMounted = false;
+            window.clearTimeout(fallbackTimerId);
         };
     }, []);
 
