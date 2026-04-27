@@ -521,7 +521,7 @@ export default function WeatherApp() {
             <RealisticBackground code={currentCode} isDay={isDay} />
 
             <div className="weather-frame relative z-10 mx-auto flex max-w-[1600px] flex-col gap-2 sm:gap-4 lg:gap-4">
-                <header className="grid gap-2 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+                <header className="grid gap-2 pt-[calc(var(--safe-top)+0.35rem)] sm:gap-4 sm:pt-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                     <div className="flex items-start gap-3 sm:gap-4">
                         <MapPin size={18} className="mt-4 shrink-0 sm:mt-6" />
                         <div className="min-w-0">
