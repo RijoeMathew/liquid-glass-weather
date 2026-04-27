@@ -463,6 +463,10 @@ export default function WeatherApp() {
     const isDay = weather ? (selectedDayIndex === 0 ? weather.current.is_day === 1 : true) : true;
 
     useEffect(() => {
+        if (!weather) {
+            return;
+        }
+
         const chromeColor = getThemeChromeColor(currentCode, isDay);
         const chromeBackground = getThemeChromeBackground(currentCode, isDay);
 
@@ -482,7 +486,7 @@ export default function WeatherApp() {
             document.head.appendChild(themeColorMeta);
         }
         themeColorMeta.setAttribute("content", chromeColor);
-    }, [currentCode, isDay]);
+    }, [weather, currentCode, isDay]);
 
     useEffect(() => {
         if (!timelineScrollRef.current) {
@@ -549,38 +553,38 @@ export default function WeatherApp() {
 
     if (isInitializingLocation || !weather) {
         return (
-            <main className="weather-shell relative isolate overflow-hidden text-white selection:bg-blue-500/30">
+            <main className="relative isolate min-h-[100dvh] overflow-hidden text-white selection:bg-blue-500/30">
                 <RealisticBackground code={2} isDay />
 
-                <div className="weather-frame relative z-10 flex items-center justify-center">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute inset-0 overflow-hidden"
+                >
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute inset-0 overflow-hidden"
-                    >
-                        <motion.div
-                            animate={{ x: ["-14%", "10%", "-14%"], y: [0, -12, 0] }}
-                            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute left-[-10%] top-[16%] h-36 w-72 rounded-full bg-white/20 blur-[42px]"
-                        />
-                        <motion.div
-                            animate={{ x: ["12%", "-10%", "12%"], y: [0, 14, 0] }}
-                            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
-                            className="absolute right-[-12%] top-[28%] h-40 w-80 rounded-full bg-white/16 blur-[48px]"
-                        />
-                        <motion.div
-                            animate={{ x: ["-8%", "8%", "-8%"], y: [0, -10, 0] }}
-                            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-                            className="absolute left-[18%] bottom-[18%] h-28 w-60 rounded-full bg-sky-100/18 blur-[40px]"
-                        />
-                    </motion.div>
+                        animate={{ x: ["-14%", "10%", "-14%"], y: [0, -12, 0] }}
+                        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute left-[-12%] top-[14%] h-36 w-80 rounded-full bg-white/20 blur-[42px]"
+                    />
+                    <motion.div
+                        animate={{ x: ["12%", "-10%", "12%"], y: [0, 14, 0] }}
+                        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+                        className="absolute right-[-14%] top-[24%] h-44 w-96 rounded-full bg-white/16 blur-[48px]"
+                    />
+                    <motion.div
+                        animate={{ x: ["-8%", "8%", "-8%"], y: [0, -10, 0] }}
+                        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+                        className="absolute left-[10%] bottom-[16%] h-28 w-72 rounded-full bg-sky-100/18 blur-[40px]"
+                    />
+                </motion.div>
 
+                <div className="relative z-10 flex min-h-[100dvh] items-center justify-center px-8 pb-8">
                     <motion.div
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="relative flex max-w-sm flex-col items-center px-8 text-center"
+                        className="relative flex max-w-sm flex-col items-center text-center"
                     >
                         <motion.div
                             animate={{ y: [0, -10, 0], scale: [1, 1.03, 1] }}

@@ -13,7 +13,7 @@ html, body {
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100dvh;
-  background: #020617;
+  background: transparent;
   font-family: 'Inter', system-ui, sans-serif;
   -ms-overflow-style: none;
   scrollbar-width: none;
