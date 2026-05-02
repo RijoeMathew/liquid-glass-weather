@@ -13,7 +13,8 @@ export const metadata: Metadata = {
     title: "Liquid Glass Weather",
   },
   icons: {
-    icon: '/liquid-glass-weather/favicon.svg',
+    icon: '/weather-app/favicon.svg',
+    apple: '/weather-app/favicon.svg',
   },
 };
 

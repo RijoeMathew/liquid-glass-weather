@@ -4,7 +4,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: '/liquid-glass-weather',
+  basePath: '/weather-app',
   // No assetPrefix needed with GitHub Actions + basePath
   trailingSlash: true,
 };
