@@ -5,12 +5,12 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Liquid Glass Weather",
-  description: "A beautiful weather app with liquid background",
+  title: "Weather",
+  description: "A beautiful and modern weather app",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Liquid Glass Weather",
+    title: "Weather",
   },
   icons: {
     icon: '/weather-app/favicon.svg',
